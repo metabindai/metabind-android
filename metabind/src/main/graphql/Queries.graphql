@@ -1,0 +1,37 @@
+
+query ContentsQuery($typeId: ID, $tags: [String!], $locale: String, $search: String, $filter: ContentFilter, $sort: [SortCriteria!], $cursor: String, $limit: Int = 20) {
+   contents(typeId: $typeId, tags: $tags, locale: $locale, search: $search, filter: $filter, sort: $sort, cursor: $cursor, limit: $limit) {
+      data {
+         ...ContentFields
+      }
+      pagination {
+         cursor
+         hasMore
+         limit
+      }
+   }
+}
+
+query ContentQuery($id: ID!) {
+    content(id: $id) {
+        ...ContentFields
+    }
+}
+
+query ResolvedPackageDataQuery($packageId: ID!) {
+    resolvedPackageData(packageId: $packageId) {
+        ...ResolvedPackageDataFields
+    }
+}
+
+query PreviewResolvedPackageDataQuery($token: String!, $packageId: ID!) {
+    previewResolvedPackageData(token: $token, packageId: $packageId) {
+        ...ResolvedPackageDataFields
+    }
+}
+
+query PreviewQuery($token: String!, $version: Int) {
+    preview(token: $token, version: $version) {
+        ...PreviewResultFields
+    }
+}
