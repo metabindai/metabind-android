@@ -85,6 +85,7 @@ class MetabindViewModel(
             is UiEvent.OnDrag -> callEventHandler(event.handlerId)
             is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
             is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
+            is UiEvent.OnSwitch -> callEventHandler(event.handlerId, arrayOf(event.checked))
         }
     }
 
@@ -116,11 +117,11 @@ class MetabindViewModel(
         }
     }
 
-    private fun callEventHandler(handlerId: String) {
+    private fun callEventHandler(handlerId: String, data: Array<Any> = emptyArray()) {
         (_uiState.value as? UiState.Success)?.let { state ->
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call eventHandler. $handlerId")
-                jsRuntime.callEventHandler(handlerId)
+                jsRuntime.callEventHandler(handlerId, data)
                 jsRuntime.willRender()
                 val component = jsRuntime.callComponent(state.componentName)
                 _uiState.value = state.copy(
