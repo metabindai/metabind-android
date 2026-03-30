@@ -84,6 +84,20 @@ class MetabindViewModel(
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
             is UiEvent.OnDrag -> callEventHandler(event.handlerId)
             is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
+            is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
+        }
+    }
+
+    private fun onNavigationTap(handlerId: String) {
+        (_uiState.value as? UiState.Success)?.let { state ->
+            viewModelScope.launch(Dispatchers.IO) {
+                jsRuntime.callForResultComponent(handlerId)?.let { component ->
+                    _uiState.value = state.copy(
+                        component = component,
+                        componentVersion = state.componentVersion + 1
+                    )
+                }
+            }
         }
     }
 
