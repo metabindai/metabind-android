@@ -45,7 +45,7 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "com.yapstudios"
             artifactId = "metabind-android"
-            version = "0.0.3"
+            version = "0.0.4"
 
             afterEvaluate {
                 from(components["default"])
