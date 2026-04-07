@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.apollographql.apollo.exception.CacheMissException
 import com.yapstudios.bindjs.DesignerComponent
 import com.yapstudios.bindjs.JsRuntime
 import com.yapstudios.bindjs.JsRuntimeImpl
@@ -70,8 +71,12 @@ class MetabindViewModel(
                 }
             },
             onFailure = { e ->
-                Log.e(TAG, "Error loading component", e)
-                _uiState.value = UiState.Error
+                if (e is CacheMissException) {
+                    Log.i(TAG, "Failed to load component from cache", e)
+                } else {
+                    Log.e(TAG, "Failed to load component from GraphQL", e)
+                    _uiState.value = UiState.Error
+                }
             }
         )
     }
