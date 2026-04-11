@@ -1,3 +1,8 @@
+/*
+ * ComposeThumbnailRenderer.kt.
+ *
+ * © 2026 Yap Studios LLC
+ */
 package com.yapstudios.metabind
 
 import android.app.Presentation

@@ -1,3 +1,8 @@
+/*
+ * ThumbnailViewModel.kt.
+ *
+ * © 2026 Yap Studios LLC
+ */
 package com.yapstudios.metabind.view
 
 import android.content.Context
