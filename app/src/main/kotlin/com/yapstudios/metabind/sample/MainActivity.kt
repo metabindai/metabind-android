@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val contentId = "d75a159c35b05c74f238d88010af8e9b0bccdbcc53d94a164c63d94af2fdac78"
+            val contentId = "96923a208c7ef23da3677b4d696126aac957b5d0cc8d11312043a8c01c77b6d1"
             Column(
                 Modifier
                     .fillMaxSize()

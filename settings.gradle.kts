@@ -36,8 +36,8 @@ rootProject.name = "metabind-android"
 include(":app")
 include(":metabind")
 
-//includeBuild("../bindjs-android") {
-//    dependencySubstitution {
-//        substitute(module("com.yapstudios:bindjs-android")).using(project(":bindjs"))
-//    }
-//}
+includeBuild("../bindjs-android") {
+    dependencySubstitution {
+        substitute(module("com.yapstudios:bindjs-android")).using(project(":bindjs"))
+    }
+}
