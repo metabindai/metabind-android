@@ -18,8 +18,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["METABIND_URL"] = "https://api-dev.metabind.ai/graphql"
-        manifestPlaceholders["METABIND_WS_URL"] = "wss://ws-api-dev.metabind.ai"
+        manifestPlaceholders["METABIND_URL"] = "https://api.metabind.ai/graphql"
+        manifestPlaceholders["METABIND_WS_URL"] = "wss://ws-api.metabind.ai"
     }
 
     buildTypes {
