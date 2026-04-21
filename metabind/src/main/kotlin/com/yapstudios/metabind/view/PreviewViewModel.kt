@@ -46,7 +46,7 @@ class PreviewViewModel(
             onSuccess = { component ->
                 try {
                     jsRuntime.setComponents(component.toDesignerComponent())
-                    val jsComponent = jsRuntime.callComponentThumbnail(component.name)
+                    val jsComponent = jsRuntime.callComponentThumbnail(component.name, component.isContent)
                     val nextVersion =
                         (_uiState.value as? UiState.Success)?.componentVersion?.plus(1) ?: 1
                     _uiState.value = UiState.Success(

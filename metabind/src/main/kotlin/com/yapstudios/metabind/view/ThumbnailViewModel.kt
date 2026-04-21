@@ -52,7 +52,7 @@ class ThumbnailViewModel(
                     jsRuntime.awaitReady()
                     val jsComponent = try {
                         jsRuntime.setComponents(component.toDesignerComponent())
-                        jsRuntime.callComponent(component.name)
+                        jsRuntime.callComponentThumbnail(component.name, component.isContent)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error loading component", e)
                         null
@@ -62,7 +62,10 @@ class ThumbnailViewModel(
                         val bitmap = withContext(Dispatchers.Main) {
                             createThumbnail(context, jsRuntime, jsComponent)
                         }
-                        _uiState.value = UiState.Success(bitmap = bitmap)
+                        _uiState.value = UiState.Success(
+                            bitmap = bitmap,
+                            isContent = component.isContent
+                        )
                     } else {
                         _uiState.value = UiState.Error
                     }
@@ -78,6 +81,7 @@ class ThumbnailViewModel(
         object Loading : UiState()
         data class Success(
             val bitmap: ImageBitmap,
+            val isContent: Boolean,
         ) : UiState()
 
         object Error : UiState()

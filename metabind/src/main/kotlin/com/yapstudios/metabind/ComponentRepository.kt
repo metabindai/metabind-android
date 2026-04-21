@@ -227,6 +227,7 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
         var componentName: String? = null
         var content: String? = null
         var packageId: String? = null
+        var isContent = false
 
         previewResultFields.onComponentPreview?.let { onComponentPreview ->
             val componentPreviewFields = onComponentPreview.componentPreviewFields
@@ -234,6 +235,7 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
             componentName = componentPreviewFields.componentName
             content = componentPreviewFields.component?.componentFields?.compiled
             packageId = componentPreviewFields.resolvedRef.resolvedPackageRefFields.`package`
+            isContent = false
         }
 
         previewResultFields.onContentPreview?.let { onContentPreview ->
@@ -242,6 +244,7 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
             componentName = contentPreviewFields.contentName
             content = contentPreviewFields.content?.contentFields?.compiled
             packageId = contentPreviewFields.resolvedRef.resolvedPackageRefFields.`package`
+            isContent = true
         }
 
         val dependencies = packageId?.let { packageId ->
@@ -257,7 +260,8 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
                 id = componentId,
                 name = componentName,
                 content = content,
-                dependencies = dependencies
+                dependencies = dependencies,
+                isContent = isContent
             )
         } else {
             null

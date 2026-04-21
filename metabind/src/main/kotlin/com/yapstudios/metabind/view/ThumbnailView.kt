@@ -63,6 +63,7 @@ fun ThumbnailView(
             is Loading -> LoadingState()
             is Success -> ComponentState(
                 bitmap = state.bitmap,
+                isContent = state.isContent,
             )
 
             is Error -> ErrorState()
@@ -73,12 +74,13 @@ fun ThumbnailView(
 @Composable
 private fun ComponentState(
     bitmap: ImageBitmap,
+    isContent: Boolean,
 ) {
     Image(
         bitmap = bitmap,
         contentDescription = "",
         contentScale = ContentScale.Crop,
-        alignment = Alignment.TopStart
+        alignment = if (isContent) Alignment.TopCenter else Alignment.Center
     )
 }
 
