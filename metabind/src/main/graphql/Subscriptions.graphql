@@ -1,0 +1,24 @@
+
+subscription ContentUpdatedSubscription($id: ID!) {
+    contentUpdated(id: $id) {
+        contentId
+        content {
+            ...ContentFields
+        }
+        resolvedRef {
+          ...ResolvedPackageRefFields
+        }
+        action
+        timestamp
+    }
+}
+
+subscription PreviewUpdatedSubscription($token: String!) {
+    previewUpdated(token: $token) {
+        action
+        timestamp
+        preview {
+            ...PreviewResultFields
+        }
+    }
+}

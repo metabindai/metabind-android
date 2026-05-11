@@ -1,0 +1,36 @@
+[versions]
+android-compile-sdk = "36"
+android-min-sdk = "26"
+android-target-sdk = "36"
+agp = "9.0.1"
+kotlin = "2.3.10"
+coreKtx = "1.17.0"
+material = "1.13.0"
+activityKtx = "1.12.4"
+javascriptengine = "1.0.0"
+gson = "2.13.2"
+android-compose = "1.10.4"
+apollo = "4.4.1"
+lifecycleViewmodelCompose = "2.9.1"
+bindjs = "0.0.9"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityKtx" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+javascriptengine = { module = "androidx.javascriptengine:javascriptengine", version.ref = "javascriptengine" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+android-compose-material = { module = "androidx.compose.material3:material3", version = "1.4.0" }
+android-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "android-compose" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
+apollo-cache = { group = "com.apollographql.apollo", name = "apollo-normalized-cache-sqlite", version.ref = "apollo" }
+apollo-normalized-cache = { group = "com.apollographql.apollo", name = "apollo-normalized-cache", version.ref = "apollo" }
+bindjs = { group = "ai.metabind", name = "bindjs-android", version.ref = "bindjs" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }

@@ -1,0 +1,70 @@
+fragment ResolvedPackageDataFields on ResolvedPackageData {
+   id
+   version
+   components
+   assets
+}
+
+fragment ContentFields on Content {
+  id
+  typeId
+  packageVersion
+  name
+  content
+  compiled
+  tags
+  locale
+  createdAt
+  updatedAt
+  lastPublishedVersion
+  resolvedRef {
+    ...ResolvedPackageRefFields
+  }
+}
+
+fragment ResolvedPackageRefFields on ResolvedPackageRef {
+  package
+  dependencies
+}
+
+fragment ComponentFields on Component {
+  id
+  name
+  title
+  content
+  compiled
+  createdAt
+  updatedAt
+}
+
+fragment ComponentPreviewFields on ComponentPreview {
+  componentId
+  componentName
+  component {
+    ...ComponentFields
+  }
+  resolvedRef {
+    ...ResolvedPackageRefFields
+  }
+}
+
+fragment ContentPreviewFields on ContentPreview {
+  contentId
+  contentName
+  contentTypeName
+  content {
+    ...ContentFields
+  }
+  resolvedRef {
+    ...ResolvedPackageRefFields
+  }
+}
+
+fragment PreviewResultFields on PreviewResult {
+  ... on ComponentPreview {
+    ...ComponentPreviewFields
+  }
+  ... on ContentPreview {
+    ...ContentPreviewFields
+  }
+}
