@@ -1,0 +1,122 @@
+[
+  {
+    "addIndex": 0,
+    "sections": [
+      {
+        "type": "message-header",
+        "canDelete": false,
+        "canMove": false,
+        "id": "61fb31dc-5427-4f38-9312-7b5c166ac450",
+        "props": {
+          "caption": "MON 13 JAN, 10:15 AM",
+          "coverImage": {
+            "contentMode": "cover",
+            "dimensions": {
+              "height": 2622,
+              "width": 2098
+            },
+            "src": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-e28cb7d1-0112-4710-a9eb-51e70f6fa88e-ucla-apply-1.png?alt=media&token=4cd343ef-ceb2-4fee-9010-53cd4d663af1"
+          },
+          "titleStyle": "titleHeader",
+          "title": "The Great Bruin Quiz"
+        }
+      },
+      {
+        "canDelete": false,
+        "type": "institution",
+        "id": "ee27c662-a8f3-480c-b95e-ca3308459ea7",
+        "canMove": false,
+        "props": {
+          "title": "Generic University",
+          "iconURL": "https://firebasestorage.googleapis.com/v0/b/cb-prototype-4e3e7.appspot.com/o/gu-logo-square.png?alt=media&token=096c8f66-1420-4992-a326-33a3084ad591",
+          "subtitle": "Someplace, Somewhere"
+        }
+      },
+      {
+        "props": {
+          "title": "Do you think you know UCLA? Its time to put your knowledge to the test!!\n",
+          "align": "left",
+          "style": "body"
+        },
+        "type": "paragraph",
+        "id": "f8d2d7b2-28ef-4f7c-aa6a-25d24f4fe9a9",
+        "canMove": true,
+        "canDelete": true
+      },
+      {
+        "canMove": true,
+        "id": "d559983e-6ec0-48af-bf9e-7719e781fae5",
+        "canDelete": true,
+        "props": {
+          "answers": [
+            "Beach volleyball",
+            "Softball",
+            "Basketball",
+            "Soccer"
+          ],
+          "title": "In which sport do Bruin women have the most NCAA team championships?",
+          "correctAnswer": 1
+        },
+        "type": "quiz"
+      },
+      {
+        "id": "da608a0d-ff09-4a43-8c18-60a279159307",
+        "canMove": true,
+        "props": {
+          "title": "Which movie was NOT filmed at UCLA?",
+          "correctAnswer": 3,
+          "answers": [
+            "Legally Blonde",
+            "The Graduate",
+            "Erin Brockovich",
+            "The Social Network"
+          ]
+        },
+        "canDelete": true,
+        "type": "quiz"
+      },
+      {
+        "canDelete": true,
+        "props": {
+          "title": "Which musician was NOT a UCLA student?",
+          "correctAnswer": 2,
+          "answers": [
+            "Jim Morrison",
+            "John Williams",
+            "Paul McCartney",
+            "Kamasi Washington"
+          ]
+        },
+        "id": "c3146614-7fb5-4689-9033-5e46b74c4a2a",
+        "canMove": true,
+        "type": "quiz"
+      },
+      {
+        "props": {
+          "answers": [
+            "Lions",
+            "Eagles",
+            "Bears",
+            "Cubs"
+          ],
+          "correctAnswer": 0,
+          "title": "In its early history, UCLAs football team was known as the &"
+        },
+        "id": "28054493-397c-417b-a378-eb9451afc51f",
+        "type": "quiz"
+      },
+      {
+        "canMove": false,
+        "id": "95f288fa-bc18-4c85-b3ae-9810c9d90dfb",
+        "canDelete": false,
+        "type": "action",
+        "props": {
+          "title": "Action"
+        }
+      }
+    ],
+    "style": "light",
+    "id": "page-1",
+    "title": "The Great Bruin Quiz"
+  }
+]

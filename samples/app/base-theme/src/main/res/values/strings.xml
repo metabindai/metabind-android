@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="common_add">Add</string>
+    <string name="common_add_to_calendar">Add to Calendar</string>
+    <string name="common_application_rules">Use of App and Privacy Policy</string>
+    <string name="common_continue">Continue</string>
+    <string name="common_close">Close</string>
+    <string name="common_generic_error">Something went wrong…</string>
+    <string name="common_go_back">Go back</string>
+    <string name="common_more">More</string>
+    <string name="common_more_like_this">More like this</string>
+    <string name="common_new">NEW</string>
+    <string name="common_ok">OK</string>
+    <string name="common_play">Play</string>
+    <string name="common_privacy_policy">Privacy Policy</string>
+    <string name="common_profile">Profile</string>
+    <string name="common_read_less">Read less</string>
+    <string name="common_read_more">Read more</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_save">Save</string>
+    <string name="common_see_more">See more</string>
+    <string name="common_support">Support</string>
+    <string name="common_terms_and_conditions">Terms and Conditions</string>
+    <string name="common_unsave">Undo Save</string>
+    <string name="common_percentile">PERCENTILE</string>
+    <string name="common_enabled">enabled</string>
+    <string name="common_disabled">disabled</string>
+
+    <string name="connections_legal_title">Connections</string>
+    <string name="connections_legal_scroll_instructions">Scroll to continue</string>
+    <string name="connections_legal_accept">Yes, I want to participate in Connections</string>
+    <string name="connections_legal_markdown">Connections is a free program that lets you hear directly from non-profit colleges, scholarship programs, and education organizations that are interested in students like you. We\'ll deliver this content via BigFuture School, email, and postal mail. We will never share your personal information with any of these organizations as part of Connections. You can opt in and out of receiving these messages in this app, email, or print mail at any time.</string>
+    <string name="connections_legal_markdown_and"> and </string>
+    <plurals name="connections_legal_markdown_test">
+        <item quantity="zero">test</item>
+        <item quantity="one">test</item>
+        <item quantity="other">tests</item>
+    </plurals>
+
+    <string name="error_default_title">Server Error</string>
+    <string name="error_default_text">There was a problem contacting the server.</string>
+
+    <string name="quiz_question_number">QUESTION %d</string>
+    <string name="quiz_result_description">%d of %d Correct</string>
+    <string name="quiz_result_title">Quiz Results</string>
+
+    <string name="scores_title_score_calculation">Score Calculation</string>
+    <string name="scores_your_math_score">Your Math Score</string>
+    <string name="scores_your_reading_writing_score">Your Reading &amp; Writing Score</string>
+    <string name="scores_reading_and_writing_label">Reading and\nWriting</string>
+    <string name="scores_math_label">\nMath</string>
+    <string name="scores_formula">"2 ( %1$s ) + "</string>
+
+    <string name="common_privacy_policy_body">**3. APP PRIVACY POLICY**\nCollege Board is committed to protecting your privacy. This App Privacy Policy describes our policies on the collection, use, and disclosure of your information when you use the App. Testing Rules for the College Board school day test(s) that you agreed to have further details on uses and disclosures of information about you. Please review our Privacy Policies and Testing Rules at privacy.collegeboard.org and our Privacy Statement available within the App. \n\nUSE OF YOUR INFORMATION\n• To provide you with college and career information, College Board will use the information you and your school, district, or state provide when you take College Board school day test(s). The educational and career interests and preferences you share with us in the App may also be used to tailor the content you see in the App from College Board.\n\n• If you opt into Connections, College Board will use the information you and your school, district, or state provide when you take College Board school day test(s) - —including your score range—to deliver messages from Eligible Institutions which may be a good fit for you. The educational and career interests and preferences you share with us in the App may also be used to tailor the content you see in Connections.\n\n• Any content you choose to provide while using the App, such as your educational and career interests and preferences, will be used by College Board to provide the College Board Education Services. This user generated content may be disclosed to your school, district, or state.\n\nLINKS\n• To give you additional resources and information, College Board may include third-party links to other sites that are not operated by us, including colleges, universities, scholarship organizations, and career information sites. In addition, Eligible Institutions may include third-party links in the messages to you through Connections, which College Board does not review or approve. College Board is not responsible for the content or operation of other websites, and links to other websites are not intended to imply endorsement of them by us. These linked sites have separate and independent privacy policies that you should read. \n\n• In Connections, Eligible Institutions may provide a link to a webpage or webform hosted by the Eligible Institution. College Board does not review or approve those links, webpages, or webforms. The App may track if you access any such links for College Board’s reporting and analytics purposes, which may be disclosed to your school, district, or state and may be disclosed only in de-identified and aggregated form to Eligible Institutions. \n\nAPP USAGE DATA\nData about your use of the App is collected automatically when you download and use the App, including, but not limited to, \n• Date, time, and duration of your use of the App, \n• View(s) of your score information on College Board school day test(s), \n• As applicable, opt-in and out status of Connections, delivery of messages through Connections to you, your view(s) of messages in Connections, and which Eligible Institutions deliver messages to you in the App, \n• Information about content you have viewed in the App,\n• Information about your searches in the App,\n• Other interactions in the App such as taps, clicks, scrolling information, saved or liked content, or other information about how you interact with the App, and \n• Other diagnostic data such as crash logs and app performance data.\n\nWe collectively refer to this as “App Usage Data”. College Board uses App Usage Data to deliver and customize the College Board Educational Services in the App and develop and improve our services. College Board may disclose your App Usage Data with your school, district, or state. College Board may disclose App Usage Data to trusted vendors but only for their use in the provision of services to us. College Board may also disclose App Usage Data in de-identified and aggregated form to others, including Eligible Institutions if you opt into Connections.  \n\n• College Board may use third-party service providers to monitor and analyze use of the App.\n\n• No location information nor device ID is collected when you use the App. \n\nRETENTION AND SECURITY\n• College Board will retain your personal information and App Usage Data for as long as necessary for purposes set out in this Use of App and Privacy Policy. \n\n• College Board takes actions to protect the security and confidentiality of personally identifiable information that may be obtained in the App in a manner consistent with industry standards. \n\n• No information about you nor any App Usage Data is sold or licensed to third parties, nor used by College Board or any third parties for marketing or other commercial purposes.\n\n**4. CHANGES TO USE OF APP AND PRIVACY POLICY**\nCollege Board may update this Use of App and Privacy Policy from time to time.  College Board will notify you of any changes and update the “Last Updated” date. \n\n**5. CONTACT US**\nIf you have any questions regarding this Use of App and Privacy Policy or our privacy and data security practices, please contact us at privacy@collegeboard.org.</string>
+    <string name="common_welcome_terms_of_service_body">**BigFuture School™: Use of App and Privacy Policy**\nLast Updated: August 1, 2023\n\nWelcome to the free BigFuture School™ mobile application™ (“App”) provided by College Board! BigFuture School lets you view your scores and get customized career information and guidance about planning and paying for college. \nYou may access this App if your school, district, or state has an agreement with College Board to administer certain College Board assessments at your school (“College Board school day tests”). \n\n**1. USES OF THE APP**\nBigFuture School is part of the educational services provided by College Board to schools, districts, and departments of education, including the following features (“College Board Educational Services”).\n\nGET YOUR SCORES\n• You may access your scores and other score information for College Board school day tests.\n\nCOLLEGE AND CAREER INFORMATION\n• You may access customized information and recommendations from College Board about college and career options, including postsecondary options and opportunities, career pathways, scholarships, National Recognition Program eligibility, financial aid, and paying for college. You may also be provided with opportunities to participate in College Board research studies. \n\nCONNECTIONS (IF APPLICABLE)\n• Based on your school’s or district’s agreement with College Board, you may have the option to participate in Connections™. If you opted–in, you may access Connections in the App, an optional feature that allows students to hear from nonprofit colleges, universities, scholarship organizations, and other nonprofit educational organizations (“Eligible Institutions”) that may be a good match. College Board will not share any of your personally identifiable information with any Eligible Institutions as part of Connections. If you are interested in one of the colleges or programs, you decide if and when to contact them outside of the App. Messages in Connections are created by Eligible Institutions and may include text, images, videos, and interactive elements. While the messages may be personalized by College Board through automated means (e.g., your name used in messages), College Board does not create, edit, or approve of these messages and is not responsible for these messages.  You may control specific communication preferences in Connections, including through settings available in the App. You may opt–out of Connections at any time by accessing the opt–out feature within the App or by contacting College Board’s customer service at (866) 756–7346. \n\nRead more about BigFuture School and Connections at [satsuite.org/bigfutureschool](www.satsuite.org/bigfutureschool). \n\n**2. APP RULES**\n• You must be 13 years or older to use the App.\n• The App is only available to you and other students who take the digital PSAT/NMSQT, PSAT 10, or SAT School Day in the United States, pursuant to an agreement between College Board and your school, district, or department of education.\n• To use the App, you provide a mobile number during the administration of the College Board school day test(s) and are encouraged to provide an email address solely for App account recovery purposes. Your phone number authenticates the student into the App. \n• The App and all of its content, features and functionality are property of College Board and/or its licensors and are protected by copyright laws. You may only use the App for its intended purposes. You are prohibited from attempting to reverse engineer, decompile, or otherwise attempt to reproduce, tamper with, or compromise the security of the App in any way.   \n• You are responsible for maintaining the security and confidentiality of your login credentials.\n• You will be able to control notifications in the App including enabling or disabling them.\n• You are responsible for any mobile charges that you may incur for using the App. If you are unsure what those charges may be, you should ask your service provider before using the App.\n• You may have opportunities to link from the App to BigFuture® and to other college and career planning services on College Board’s website at [www.collegeboard.org](www.collegeboard.org). Those services are not part of College Board Educational Services.</string>
+    
+    <string name="switch_list_item_content_description">"%s is %s"</string>
+    <string name="arriving_soon">ARRIVING SOON</string>
+    <plurals name="common_number_of_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="common_number_of_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
+    <string name="push_notification_prompt_title">Enable Notifications</string>
+    <string name="push_notification_prompt_body">Get notified when you receive new messages from Colleges</string>
+    <string name="push_notification_prompt_positive_button">Enable Notifications</string>
+    <string name="push_notification_prompt_neutral">Not Now</string>
+    <string name="push_notification_prompt_negative">Don\'t Ask Again</string>
+</resources>

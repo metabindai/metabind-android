@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme.ComposeTheming" parent="AppTheme.Material.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/status_bar</item>
+    </style>
+
+    <style name="AppTheme.Material.DayNight.NoActionBar" parent="@android:style/Theme.Material.Light.NoActionBar" />
+
+    <style name="AppTheme.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/branding_color_2</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_bfs_acorn</item>
+        <item name="windowSplashScreenAnimationDuration">750</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.ComposeTheming</item>
+    </style>
+
+</resources>

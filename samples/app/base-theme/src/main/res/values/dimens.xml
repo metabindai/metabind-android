@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <dimen name="base_ui_processing_scores_icon_size">51dp</dimen>
+    <dimen name="quiz_icon_size">24dp</dimen>
+    <dimen name="quiz_empty_icon_size">16dp</dimen>
+    <dimen name="quiz_empty_icon_width">2dp</dimen>
+    <dimen name="quiz_question_container_corner_radius">12dp</dimen>
+    <dimen name="quiz_answer_clip_corner_radius">10dp</dimen>
+</resources>
