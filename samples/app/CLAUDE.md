@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Metabind App Android is an Android demo app that renders dynamic UI components from the Metabind service. It uses the external Metabind library (`com.yapstudios:metabind-android`) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
+Metabind App Android is an Android demo app that renders dynamic UI components from the Metabind service. It uses the external Metabind library (`ai.metabind:metabind-android`) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
 
 ## Build Commands
 
@@ -42,7 +42,7 @@ The project uses a multi-module architecture organized by feature and layer:
 
 ### Metabind Integration
 
-The app uses the external `com.yapstudios:metabind-android` library (hosted on GitHub Packages) to render dynamic UI components:
+The app uses the external `ai.metabind:metabind-android` library (hosted on GitHub Packages) to render dynamic UI components:
 
 - **`MetabindView`** (feature-home/DetailScreen.kt): Renders a full component by content ID with real-time subscription support
 - **`ThumbnailView`** (feature-home/RecentsScreen.kt): Renders component thumbnails in the recents list

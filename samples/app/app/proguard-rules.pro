@@ -25,4 +25,4 @@
 -dontwarn org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 -dontwarn org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 
--keep class com.yapstudios.**
+-keep class ai.metabind.**
