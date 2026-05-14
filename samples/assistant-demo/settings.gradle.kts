@@ -42,9 +42,9 @@ include(":app")
 
 // Uncomment to develop against a local checkout of metabind-ai-android:
 //
-includeBuild("../metabind-ai-android") {
-    dependencySubstitution {
-        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
-        substitute(module("ai.metabind:metabind-assistant-android")).using(project(":metabindassistant"))
-    }
-}
+//includeBuild("../metabind-ai-android") {
+//    dependencySubstitution {
+//        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
+//        substitute(module("ai.metabind:metabind-assistant-android")).using(project(":metabindassistant"))
+//    }
+//}
