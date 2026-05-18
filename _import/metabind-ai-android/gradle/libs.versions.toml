@@ -14,7 +14,7 @@ okhttp-sse = { group = "com.squareup.okhttp3", name = "okhttp-sse", version.ref 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-bindjs = { group = "com.yapstudios", name = "bindjs-android", version.ref = "bindjs" }
+bindjs = { group = "ai.metabind", name = "bindjs-android", version.ref = "bindjs" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }

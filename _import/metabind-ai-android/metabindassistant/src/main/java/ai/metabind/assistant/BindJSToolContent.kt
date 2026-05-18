@@ -5,8 +5,8 @@
  */
 package ai.metabind.assistant
 
+import ai.metabind.bindjs.DesignerComponent
 import ai.metabind.mcpappshost.ResourceContent
-import com.yapstudios.bindjs.DesignerComponent
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive

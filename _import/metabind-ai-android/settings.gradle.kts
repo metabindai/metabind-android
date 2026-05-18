@@ -35,6 +35,6 @@ include(":metabindassistant")
 
 //includeBuild("../bindjs-android") {
 //    dependencySubstitution {
-//        substitute(module("com.yapstudios:bindjs-android")).using(project(":bindjs"))
+//        substitute(module("ai.metabind:bindjs-android")).using(project(":bindjs"))
 //    }
 //}
