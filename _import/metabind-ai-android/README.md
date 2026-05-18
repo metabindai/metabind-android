@@ -2,7 +2,7 @@
 
 Native host SDK for rendering interactive [MCP](https://modelcontextprotocol.io) tool results as [Jetpack Compose](https://developer.android.com/jetpack/compose) views.
 
-MCP servers return "apps" — resources containing BindJS components (or MCP-app HTML) — alongside tool results. This SDK discovers those tools, streams an agent conversation through the Metabind proxy, decodes the returned UI bundles, and exposes them as plain Kotlin data classes ready for native rendering. Native rendering is delegated to the separate [`bindjs-android`](https://github.com/yapstudios/bindjs-android) library.
+MCP servers return "apps" — resources containing BindJS components (or MCP-app HTML) — alongside tool results. This SDK discovers those tools, streams an agent conversation through the Metabind proxy, decodes the returned UI bundles, and exposes them as plain Kotlin data classes ready for native rendering. Native rendering is delegated to the separate [`bindjs-android`](https://github.com/metabindai/bindjs-android) library.
 
 ## Modules
 
@@ -11,7 +11,7 @@ MCP servers return "apps" — resources containing BindJS components (or MCP-app
 | **`mcpappshost`** | `ai.metabind:mcpappshost-android` | Low-level MCP client + LLM transport types. `MCPAppsClient`, `LLMMessage`, `LLMStreamEvent`. |
 | **`metabindassistant`** | `ai.metabind:metabind-assistant-android` | Higher-level agent-proxy provider + `ToolUIContent` dispatcher (BindJS / HTML) + `ChatMessage`. Depends on `mcpappshost`. |
 
-The split mirrors the Apple counterpart at [`metabind-ai-apple`](https://github.com/yapstudios/metabind-ai-apple) (`MCPAppsHost` + `MetabindAssistant`).
+The split mirrors the Apple counterpart at [`metabind-ai-apple`](https://github.com/metabindai/metabind-ai-apple) (`MCPAppsHost` + `MetabindAssistant`).
 
 ## Requirements
 
@@ -147,13 +147,13 @@ Consumers then add `mavenLocal()` to their repositories.
 
 ## Local development against a consuming app
 
-The demo app at [`metabind-assistant-demo-android`](https://github.com/yapstudios/metabind-assistant-demo-android) can be built against a local checkout of this SDK via Gradle composite builds. Uncomment the `includeBuild("../metabind-ai-android")` block in the demo's `settings.gradle.kts`.
+The demo app at [`metabind-assistant-demo-android`](https://github.com/metabindai/metabind-assistant-demo-android) can be built against a local checkout of this SDK via Gradle composite builds. Uncomment the `includeBuild("../metabind-ai-android")` block in the demo's `settings.gradle.kts`.
 
 ## Example app
 
 A runnable showcase lives in its own repo:
 
-**[metabind-assistant-demo-android](https://github.com/yapstudios/metabind-assistant-demo-android)** — Compose chat app wired to the Metabind Agent proxy, rendering real interactive product components.
+**[metabind-assistant-demo-android](https://github.com/metabindai/metabind-assistant-demo-android)** — Compose chat app wired to the Metabind Agent proxy, rendering real interactive product components.
 
 ## License
 

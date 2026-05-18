@@ -43,7 +43,7 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "ai.metabind"
             artifactId = "mcpappshost-android"
-            version = "0.1.0"
+            version = "0.1.1"
 
             afterEvaluate {
                 from(components["default"])
