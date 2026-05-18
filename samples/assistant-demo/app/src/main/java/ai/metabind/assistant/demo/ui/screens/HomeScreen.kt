@@ -79,12 +79,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.halilibo.richtext.commonmark.Markdown
 import com.halilibo.richtext.ui.material3.RichText
-import com.yapstudios.bindjs.JsRuntimeImpl
-import com.yapstudios.bindjs.McpHost
-import com.yapstudios.bindjs.composables.BindJSView
-import com.yapstudios.bindjs.composables.LocalHostScrollsVertically
-import com.yapstudios.bindjs.composables.UiEvent
-import com.yapstudios.bindjs.model.BaseComponent
+import ai.metabind.bindjs.JsRuntimeImpl
+import ai.metabind.bindjs.McpHost
+import ai.metabind.bindjs.composables.BindJSView
+import ai.metabind.bindjs.composables.LocalHostScrollsVertically
+import ai.metabind.bindjs.composables.UiEvent
+import ai.metabind.bindjs.model.BaseComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -536,7 +536,7 @@ iframe{border:0;width:100%;height:100%;display:block;background:transparent}
 """.trimIndent()
 }
 
-private fun handleBindJSEvent(jsRuntime: com.yapstudios.bindjs.JsRuntime, event: UiEvent) {
+private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: UiEvent) {
     CoroutineScope(Dispatchers.IO).launch {
         when (event) {
             is UiEvent.OnTap -> jsRuntime.callEventHandler(event.handlerId)
@@ -596,7 +596,7 @@ private fun jsonElementToAny(element: JsonElement): Any {
 
 /**
  * Convert a JsonElement (expected to be an object) into the loosely-typed map
- * used by [com.yapstudios.bindjs.JsRuntime.callComponent] for component props.
+ * used by [ai.metabind.bindjs.JsRuntime.callComponent] for component props.
  * Non-object inputs and null produce an empty map.
  */
 private fun jsonObjectToMap(element: JsonElement?): Map<String, Any?> {

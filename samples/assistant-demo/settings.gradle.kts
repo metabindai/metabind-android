@@ -41,7 +41,6 @@ rootProject.name = "metabind-assistant-demo"
 include(":app")
 
 // Uncomment to develop against a local checkout of metabind-ai-android:
-//
 //includeBuild("../metabind-ai-android") {
 //    dependencySubstitution {
 //        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
