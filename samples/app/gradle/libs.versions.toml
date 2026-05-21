@@ -19,7 +19,7 @@ javascriptengine = "1.0.0"
 room = "2.8.4"
 camerax = "1.6.0"
 mlkit-barcode-scanning = "17.3.0"
-metabind = "0.0.9"
+metabind = "0.0.10"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
