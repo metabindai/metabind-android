@@ -12,7 +12,7 @@ gson = "2.13.2"
 android-compose = "1.10.4"
 apollo = "4.4.1"
 lifecycleViewmodelCompose = "2.9.1"
-bindjs = "0.0.10"
+bindjs = "0.0.11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

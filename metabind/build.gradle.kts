@@ -45,7 +45,7 @@ publishing {
         register<MavenPublication>("release") {
             groupId = "ai.metabind"
             artifactId = "metabind-android"
-            version = "0.0.9"
+            version = "0.0.10"
 
             afterEvaluate {
                 from(components["default"])
