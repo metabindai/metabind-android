@@ -262,6 +262,43 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
+     * Invoke a tool on the MCP server on behalf of a BindJS view that called
+     * `host.toolCall(name, args)`. Returns the parsed tool result (typically
+     * the JSON the JS data source's handler returned), or throws if the call
+     * fails. We re-init the MCP client if it hasn't connected yet — the
+     * BindJS view may render before [initMCPClient] has finished on first
+     * launch.
+     */
+    suspend fun callMcpTool(name: String, args: Map<String, Any?>): Any? {
+        initJob?.join()
+        if (mcpClient == null) initMCPClient()
+        val client = mcpClient ?: throw IllegalStateException("MCP client not initialized")
+
+        val argsJson = JsonObject(args.mapValues { anyToJsonElement(it.value) })
+        val result = client.callTool(name, argsJson)
+        val text = result.textContent
+        if (result.isError) {
+            throw IllegalStateException("tool '$name' failed: $text")
+        }
+        if (text.isBlank()) return null
+        val parsed = kotlinx.serialization.json.Json.parseToJsonElement(text)
+        return jsonElementToPlain(parsed)
+    }
+
+    private fun jsonElementToPlain(element: JsonElement): Any? = when (element) {
+        is JsonNull -> null
+        is JsonPrimitive -> {
+            if (element.isString) element.content
+            else element.content.toBooleanStrictOrNull()
+                ?: element.content.toLongOrNull()
+                ?: element.content.toDoubleOrNull()
+                ?: element.content
+        }
+        is JsonObject -> element.entries.associate { (k, v) -> k to jsonElementToPlain(v) }
+        is JsonArray -> element.map { jsonElementToPlain(it) }
+    }
+
+    /**
      * Merge structured context contributed by a BindJS view (via
      * `host.updateModelContext({...})`). The next [sendMessage] will prefix
      * this as a `<context>...</context>` block in the model-visible message.

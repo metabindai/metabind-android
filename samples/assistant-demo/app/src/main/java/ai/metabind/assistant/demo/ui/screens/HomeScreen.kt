@@ -179,6 +179,7 @@ fun HomeScreen(
                     toolUIContent = toolUIContent[message.id],
                     onSendMessage = sendMessageAndScroll,
                     onUpdateModelContext = viewModel::mergePendingContext,
+                    onCallTool = viewModel::callMcpTool,
                 )
             }
         }
@@ -259,6 +260,7 @@ private fun MessageBubble(
     toolUIContent: ToolUIContent? = null,
     onSendMessage: (String) -> Unit = {},
     onUpdateModelContext: (Map<String, Any?>) -> Unit = {},
+    onCallTool: suspend (String, Map<String, Any?>) -> Any? = { _, _ -> null },
 ) {
     when (message.role) {
         MessageRole.USER -> UserBubble(message)
@@ -270,6 +272,7 @@ private fun MessageBubble(
                     toolUIContent,
                     onSendMessage,
                     onUpdateModelContext,
+                    onCallTool,
                 )
                 is ToolUIContent.Html -> HtmlToolBubble(message, toolUIContent)
                 null -> {} // Hide tools without UI — data-only tools are not user-facing
@@ -328,14 +331,45 @@ private fun BindJSToolBubble(
     content: ToolUIContent.BindJS,
     onSendMessage: (String) -> Unit,
     onUpdateModelContext: (Map<String, Any?>) -> Unit,
+    onCallTool: suspend (String, Map<String, Any?>) -> Any?,
 ) {
     val context = LocalContext.current
     val jsRuntime = remember { JsRuntimeImpl.getInstance(context.applicationContext) }
     var renderedComponent by remember { mutableStateOf<BaseComponent<*>?>(null) }
     var version by remember { mutableIntStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Re-fetch the tree from JS after a `useState` setter fires. The JS
+    // shim coalesces bursts, so this fires once per microtask flush. We
+    // call back into the runtime singleton — if another bubble has since
+    // claimed the host, that's fine, hooks are keyed by render path and
+    // the previous bubble simply won't re-render.
+    //
+    // `willRender()` is required before each `callComponent`: it resets
+    // `hookState.path` / `childIndex` to zero so the JS tree traversal
+    // can re-find each component's hooks via the same path it used the
+    // first time. Without this, the second render reads from stale paths
+    // and `useState` returns its initial value, so freshly-hydrated data
+    // looks like it never landed.
+    suspend fun rerender() {
+        try {
+            jsRuntime.willRender()
+            val next = jsRuntime.callComponent(
+                content.layoutComponentName,
+                jsonObjectToMap(content.toolArguments),
+            )
+            renderedComponent = next
+            version++
+        } catch (e: Exception) {
+            Log.e("BindJSToolBubble", "rerender failed", e)
+        }
+    }
 
     LaunchedEffect(content) {
         try {
+            jsRuntime.setOnRerenderRequested {
+                coroutineScope.launch { rerender() }
+            }
             jsRuntime.setMcpHost(object : McpHost {
                 override fun openLink(url: String) {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -349,6 +383,17 @@ private fun BindJSToolBubble(
 
                 override fun updateModelContext(content: Map<String, Any?>) {
                     onUpdateModelContext(content)
+                }
+
+                override fun log(level: String, message: String) {
+                    Log.d("BindJSHost", "[$level] $message")
+                }
+
+                override suspend fun toolCall(
+                    name: String,
+                    args: Map<String, Any?>,
+                ): Any? {
+                    return onCallTool(name, args)
                 }
             })
             jsRuntime.awaitReady()
