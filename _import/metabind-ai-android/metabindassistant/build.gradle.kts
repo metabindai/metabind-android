@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     `maven-publish`
 }
@@ -29,6 +30,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
     }
 
     publishing {
@@ -71,7 +75,14 @@ dependencies {
     api(libs.bindjs)
     api(libs.kotlinx.serialization.json)
     api(libs.kotlinx.coroutines.core)
+    api(platform(libs.androidx.compose.bom))
+    api(libs.androidx.compose.ui)
+    api(libs.androidx.compose.material3)
+    api(libs.androidx.compose.foundation)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
     implementation(libs.okhttp.sse)
+    implementation(libs.richtext.commonmark)
+    implementation(libs.richtext.ui.material3)
+    debugImplementation(libs.androidx.compose.ui.tooling.preview)
 }
