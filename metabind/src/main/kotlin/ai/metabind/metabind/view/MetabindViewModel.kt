@@ -40,6 +40,14 @@ class MetabindViewModel(
     fun loadContent(contentId: String, enableSubscription: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             jsRuntime.awaitReady()
+            // JS state changes that land *after* an event handler returns —
+            // e.g. a swipe's settle/reshuffle scheduled via setTimeout, or a
+            // resolved host.toolCall(...) hydration — signal a rerender through
+            // this listener. Without it only the synchronous state set during
+            // an event handler is rendered, so deferred updates silently stall.
+            jsRuntime.setOnRerenderRequested {
+                viewModelScope.launch(Dispatchers.IO) { rerenderFromJs() }
+            }
             if (enableSubscription) {
                 launch {
                     componentRepository.subscribeToPreviewByToken(contentId).collect { }
@@ -93,7 +101,7 @@ class MetabindViewModel(
             is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
             is UiEvent.OnTap -> callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            is UiEvent.OnDrag -> callEventHandler(event.handlerId)
+            is UiEvent.OnDrag -> callEventHandler(event.handlerId, arrayOf(event.state))
             is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
             is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
             is UiEvent.OnSwitch -> callEventHandler(event.handlerId, arrayOf(event.checked))
@@ -140,6 +148,21 @@ class MetabindViewModel(
                     componentVersion = state.componentVersion + 1
                 )
             }
+        }
+    }
+
+    /** Re-render in response to a JS-driven (deferred) state change. */
+    private suspend fun rerenderFromJs() {
+        val state = _uiState.value as? UiState.Success ?: return
+        try {
+            jsRuntime.willRender()
+            val component = renderComponent(state.componentName, state.isContent)
+            _uiState.value = state.copy(
+                component = component,
+                componentVersion = state.componentVersion + 1
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "rerender failed", e)
         }
     }
 

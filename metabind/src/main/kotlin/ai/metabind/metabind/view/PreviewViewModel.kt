@@ -37,6 +37,14 @@ class PreviewViewModel(
     fun loadContent(contentId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             jsRuntime.awaitReady()
+            // JS state changes that land *after* an event handler returns —
+            // e.g. a swipe's settle/reshuffle scheduled via setTimeout, or a
+            // resolved host.toolCall(...) hydration — signal a rerender through
+            // this listener. Without it only the synchronous state set during
+            // an event handler is rendered, so deferred updates silently stall.
+            jsRuntime.setOnRerenderRequested {
+                viewModelScope.launch(Dispatchers.IO) { rerenderFromJs() }
+            }
             updateComponent(componentRepository.getPreviewByToken(contentId, true))
         }
     }
@@ -72,16 +80,16 @@ class PreviewViewModel(
             is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
             is UiEvent.OnTap -> callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            is UiEvent.OnDrag -> callEventHandler(event.handlerId)
+            is UiEvent.OnDrag -> callEventHandler(event.handlerId, arrayOf(event.state))
             else -> {}
         }
     }
 
-    private fun callEventHandler(handlerId: String) {
+    private fun callEventHandler(handlerId: String, data: Array<Any> = emptyArray()) {
         (_uiState.value as? UiState.Success)?.let { state ->
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call eventHandler. $handlerId")
-                jsRuntime.callEventHandler(handlerId)
+                jsRuntime.callEventHandler(handlerId, data)
                 jsRuntime.willRender()
                 val component = jsRuntime.callComponent(state.componentName)
                 _uiState.value = state.copy(
@@ -89,6 +97,21 @@ class PreviewViewModel(
                     componentVersion = state.componentVersion + 1
                 )
             }
+        }
+    }
+
+    /** Re-render in response to a JS-driven (deferred) state change. */
+    private suspend fun rerenderFromJs() {
+        val state = _uiState.value as? UiState.Success ?: return
+        try {
+            jsRuntime.willRender()
+            val component = jsRuntime.callComponent(state.componentName)
+            _uiState.value = state.copy(
+                component = component,
+                componentVersion = state.componentVersion + 1
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "rerender failed", e)
         }
     }
 
