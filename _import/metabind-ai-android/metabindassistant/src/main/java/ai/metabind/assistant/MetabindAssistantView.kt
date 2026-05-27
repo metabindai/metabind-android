@@ -622,7 +622,7 @@ private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: Ui
             is UiEvent.OnDisappear -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnSwitch -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.checked))
-            is UiEvent.OnDrag -> jsRuntime.callEventHandler(event.handlerId)
+            is UiEvent.OnDrag -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.state))
             is UiEvent.OnNavigationTap -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnPickerTap -> jsRuntime.callPickerSetter(event.setterId, event.tag)
         }
