@@ -625,6 +625,7 @@ private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: Ui
             is UiEvent.OnDrag -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.state))
             is UiEvent.OnNavigationTap -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnPickerTap -> jsRuntime.callPickerSetter(event.setterId, event.tag)
+            is UiEvent.OnChartSelection -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.value))
         }
     }
 }

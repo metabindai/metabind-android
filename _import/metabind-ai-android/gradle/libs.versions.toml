@@ -6,7 +6,7 @@ androidMinSdk = "26"
 okhttp = "4.12.0"
 kotlinxCoroutines = "1.10.2"
 kotlinxSerializationJson = "1.8.1"
-bindjs = "0.0.12"
+bindjs = "0.0.13"
 composeBom = "2026.02.01"
 richtext = "1.0.0-alpha01"
 
