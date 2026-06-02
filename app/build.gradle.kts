@@ -20,6 +20,15 @@ android {
 
         manifestPlaceholders["METABIND_URL"] = "https://api.metabind.ai/graphql"
         manifestPlaceholders["METABIND_WS_URL"] = "wss://ws-api.metabind.ai"
+
+        // Credentials — supply via Gradle properties (e.g. ~/.gradle/gradle.properties
+        // or -PmetabindApiKey=...) so secrets stay out of version control.
+        manifestPlaceholders["METABIND_API_KEY"] =
+            (project.findProperty("metabindApiKey") as String?).orEmpty()
+        manifestPlaceholders["METABIND_ORGANIZATION_ID"] =
+            (project.findProperty("metabindOrganizationId") as String?).orEmpty()
+        manifestPlaceholders["METABIND_PROJECT_ID"] =
+            (project.findProperty("metabindProjectId") as String?).orEmpty()
     }
 
     buildTypes {

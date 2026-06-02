@@ -22,5 +22,14 @@
         <meta-data
             android:name="ai.metabind.metabind.ws.url"
             android:value="${METABIND_WS_URL}" />
+        <meta-data
+            android:name="ai.metabind.metabind.api.key"
+            android:value="${METABIND_API_KEY}" />
+        <meta-data
+            android:name="ai.metabind.metabind.organization.id"
+            android:value="${METABIND_ORGANIZATION_ID}" />
+        <meta-data
+            android:name="ai.metabind.metabind.project.id"
+            android:value="${METABIND_PROJECT_ID}" />
     </application>
 </manifest>

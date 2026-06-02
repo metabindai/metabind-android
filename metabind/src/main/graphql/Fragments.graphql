@@ -68,3 +68,58 @@ fragment PreviewResultFields on PreviewResult {
     ...ContentPreviewFields
   }
 }
+
+fragment ContentTypeFields on ContentType {
+  id
+  name
+  packageVersion
+  schema
+  updatedAt
+}
+
+fragment AssetFields on Asset {
+  id
+  name
+  type
+  url
+  size
+  width
+  height
+  tags
+  updatedAt
+}
+
+fragment TagFields on Tag {
+  id
+  name
+  slug
+}
+
+fragment SavedSearchFields on SavedSearch {
+  id
+  name
+  type
+}
+
+fragment PackageDependencyFields on PackageDependency {
+  projectId
+  version
+}
+
+fragment PackageFields on Package {
+  id
+  version
+  components {
+    ...ComponentFields
+  }
+  assets {
+    ...AssetFields
+  }
+  dependencies {
+    ...PackageDependencyFields
+  }
+  compiled
+  resolvedRef {
+    ...ResolvedPackageRefFields
+  }
+}

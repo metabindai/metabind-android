@@ -9,6 +9,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.api.ApolloResponse
+import com.apollographql.apollo.api.Operation
+import com.apollographql.apollo.api.Optional
 import com.apollographql.apollo.cache.normalized.FetchPolicy
 import com.apollographql.apollo.cache.normalized.api.MemoryCacheFactory
 import com.apollographql.apollo.cache.normalized.apolloStore
@@ -21,8 +24,18 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.reflect.TypeToken
+import ai.metabind.metabind.fragment.AssetFields
+import ai.metabind.metabind.fragment.ComponentFields
 import ai.metabind.metabind.fragment.ContentFields
+import ai.metabind.metabind.fragment.ContentTypeFields
+import ai.metabind.metabind.fragment.PackageFields
 import ai.metabind.metabind.fragment.PreviewResultFields
+import ai.metabind.metabind.fragment.SavedSearchFields
+import ai.metabind.metabind.fragment.TagFields
+import ai.metabind.metabind.type.AssetFilter
+import ai.metabind.metabind.type.ContentFilter
+import ai.metabind.metabind.type.SavedSearchType
+import ai.metabind.metabind.type.SortCriteria
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -58,10 +71,28 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
             if (url == null || wsUrl == null) {
                 throw RuntimeException("ai.metabind.metabind.url and ai.metabind.metabind.ws.url are not set in AndroidManifest.xml")
             }
+            val apiKey = bundle.getString("ai.metabind.metabind.api.key") ?: ""
+            val organizationId = bundle.getString("ai.metabind.metabind.organization.id") ?: ""
+            val projectId = bundle.getString("ai.metabind.metabind.project.id") ?: ""
+            // Matches the metabind-apple SDK: HTTP requests carry an
+            // "x-api-key: <org>:<project>:<apiKey>" header, and the WebSocket
+            // connection sends the same credentials in its init payload.
+            val apiKeyHeader = "$organizationId:$projectId:$apiKey"
             return ApolloClient.Builder()
                 .serverUrl(url)
+                .addHttpHeader("x-api-key", apiKeyHeader)
                 .webSocketServerUrl(wsUrl)
-                .wsProtocol(GraphQLWsProtocol.Factory())
+                .wsProtocol(
+                    GraphQLWsProtocol.Factory(
+                        connectionPayload = {
+                            mapOf(
+                                "apiKey" to apiKey,
+                                "organizationId" to organizationId,
+                                "projectId" to projectId,
+                            )
+                        }
+                    )
+                )
                 .webSocketReopenWhen { t, attempt ->
                     Log.w(
                         "MetabindApolloClient",
@@ -267,4 +298,270 @@ class ComponentRepository(private val apolloClient: ApolloClient, private val gs
             null
         }
     }
+
+    // region CMS browse queries
+    //
+    // Read-only access to the published CMS catalog (contents, components,
+    // content types, assets, tags, packages, and saved searches), mirroring the
+    // operations exposed by the metabind-apple SDK. Results are returned as the
+    // generated Apollo fragment types, wrapped in [Page] for the paginated list
+    // queries.
+
+    suspend fun getContents(
+        typeId: String? = null,
+        tags: List<String>? = null,
+        locale: String? = null,
+        search: String? = null,
+        filter: ContentFilter? = null,
+        sort: List<SortCriteria>? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<ContentFields> {
+        val contents = apolloClient.query(
+            ContentsQuery(
+                typeId = Optional.presentIfNotNull(typeId),
+                tags = Optional.presentIfNotNull(tags),
+                locale = Optional.presentIfNotNull(locale),
+                search = Optional.presentIfNotNull(search),
+                filter = Optional.presentIfNotNull(filter),
+                sort = Optional.presentIfNotNull(sort),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().contents
+        return Page(
+            data = contents.data.map { it.contentFields },
+            cursor = contents.pagination.cursor,
+            hasMore = contents.pagination.hasMore,
+            limit = contents.pagination.limit,
+        )
+    }
+
+    suspend fun getComponent(id: String, refresh: Boolean = false): ComponentFields? =
+        apolloClient.query(ComponentQuery(id))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .component
+            ?.componentFields
+
+    suspend fun getComponents(
+        search: String? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<ComponentFields> {
+        val components = apolloClient.query(
+            ComponentsQuery(
+                search = Optional.presentIfNotNull(search),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().components
+        return Page(
+            data = components.data.map { it.componentFields },
+            cursor = components.pagination.cursor,
+            hasMore = components.pagination.hasMore,
+            limit = components.pagination.limit,
+        )
+    }
+
+    suspend fun getContentType(id: String, refresh: Boolean = false): ContentTypeFields? =
+        apolloClient.query(ContentTypeQuery(id))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .contentType
+            ?.contentTypeFields
+
+    suspend fun getContentTypes(
+        search: String? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<ContentTypeFields> {
+        val contentTypes = apolloClient.query(
+            ContentTypesQuery(
+                search = Optional.presentIfNotNull(search),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().contentTypes
+        return Page(
+            data = contentTypes.data.map { it.contentTypeFields },
+            cursor = contentTypes.pagination.cursor,
+            hasMore = contentTypes.pagination.hasMore,
+            limit = contentTypes.pagination.limit,
+        )
+    }
+
+    suspend fun getAsset(id: String, refresh: Boolean = false): AssetFields? =
+        apolloClient.query(AssetQuery(id))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .asset
+            ?.assetFields
+
+    suspend fun getAssets(
+        type: String? = null,
+        tags: List<String>? = null,
+        search: String? = null,
+        filter: AssetFilter? = null,
+        sort: List<SortCriteria>? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<AssetFields> {
+        val assets = apolloClient.query(
+            AssetsQuery(
+                type = Optional.presentIfNotNull(type),
+                tags = Optional.presentIfNotNull(tags),
+                search = Optional.presentIfNotNull(search),
+                filter = Optional.presentIfNotNull(filter),
+                sort = Optional.presentIfNotNull(sort),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().assets
+        return Page(
+            data = assets.data.map { it.assetFields },
+            cursor = assets.pagination.cursor,
+            hasMore = assets.pagination.hasMore,
+            limit = assets.pagination.limit,
+        )
+    }
+
+    suspend fun getTag(id: String, refresh: Boolean = false): TagFields? =
+        apolloClient.query(TagQuery(id))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .tag
+            ?.tagFields
+
+    suspend fun getTags(
+        search: String? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<TagFields> {
+        val tags = apolloClient.query(
+            TagsQuery(
+                search = Optional.presentIfNotNull(search),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().tags
+        return Page(
+            data = tags.data.map { it.tagFields },
+            cursor = tags.pagination.cursor,
+            hasMore = tags.pagination.hasMore,
+            limit = tags.pagination.limit,
+        )
+    }
+
+    suspend fun getPackage(version: String, refresh: Boolean = false): PackageFields? =
+        apolloClient.query(PackageQuery(version))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .`package`
+            ?.packageFields
+
+    suspend fun getPackages(
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<PackageFields> {
+        val packages = apolloClient.query(
+            PackagesQuery(
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().packages
+        return Page(
+            data = packages.data.map { it.packageFields },
+            cursor = packages.pagination.cursor,
+            hasMore = packages.pagination.hasMore,
+            limit = packages.pagination.limit,
+        )
+    }
+
+    suspend fun getSavedSearch(id: String, refresh: Boolean = false): SavedSearchFields? =
+        apolloClient.query(SavedSearchQuery(id))
+            .fetchPolicy(fetchPolicy(refresh))
+            .execute()
+            .dataOrThrow()
+            .savedSearch
+            ?.savedSearchFields
+
+    suspend fun getSavedSearches(
+        type: SavedSearchType? = null,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): Page<SavedSearchFields> {
+        val savedSearches = apolloClient.query(
+            SavedSearchesQuery(
+                type = Optional.presentIfNotNull(type),
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().savedSearches
+        return Page(
+            data = savedSearches.data.map { it.savedSearchFields },
+            cursor = savedSearches.pagination.cursor,
+            hasMore = savedSearches.pagination.hasMore,
+            limit = savedSearches.pagination.limit,
+        )
+    }
+
+    suspend fun executeSavedSearch(
+        id: String,
+        cursor: String? = null,
+        limit: Int? = null,
+        refresh: Boolean = false,
+    ): SavedSearchResults {
+        val result = apolloClient.query(
+            ExecuteSavedSearchQuery(
+                id = id,
+                cursor = Optional.presentIfNotNull(cursor),
+                limit = Optional.presentIfNotNull(limit),
+            )
+        ).fetchPolicy(fetchPolicy(refresh)).execute().dataOrThrow().executeSavedSearch
+
+        result.onContentList?.let { contents ->
+            return SavedSearchResults.Contents(
+                Page(
+                    data = contents.data.map { it.contentFields },
+                    cursor = contents.pagination.cursor,
+                    hasMore = contents.pagination.hasMore,
+                    limit = contents.pagination.limit,
+                )
+            )
+        }
+        result.onAssetList?.let { assets ->
+            return SavedSearchResults.Assets(
+                Page(
+                    data = assets.data.map { it.assetFields },
+                    cursor = assets.pagination.cursor,
+                    hasMore = assets.pagination.hasMore,
+                    limit = assets.pagination.limit,
+                )
+            )
+        }
+        throw RuntimeException("Unknown saved search result type")
+    }
+
+    private fun fetchPolicy(refresh: Boolean): FetchPolicy =
+        if (refresh) FetchPolicy.NetworkFirst else FetchPolicy.CacheFirst
+
+    private fun <D : Operation.Data> ApolloResponse<D>.dataOrThrow(): D {
+        exception?.let { throw it }
+        errors?.firstOrNull()?.let { throw RuntimeException(it.message) }
+        return data ?: throw RuntimeException("Unknown Error")
+    }
+    // endregion
 }
