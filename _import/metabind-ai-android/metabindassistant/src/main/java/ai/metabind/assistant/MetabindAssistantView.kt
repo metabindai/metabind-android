@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -128,6 +127,10 @@ fun MetabindAssistantView(
         if (messages.isNotEmpty()) listState.smoothScrollToBottom()
     }
 
+    // In-flow layout: the message list takes the remaining space (weight 1f) and
+    // CONTRACTS when the input bar rises with the keyboard (imePadding on the root
+    // Column), so chat content always stays above the input field — never hidden
+    // behind it.
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -173,6 +176,20 @@ fun MetabindAssistantView(
                     onSendMessage = sendAndScroll,
                     onUpdateModelContext = assistant::mergePendingContext,
                     onCallTool = assistant::callMcpTool,
+                )
+            }
+
+            // reverseLayout = true, so the last-declared item renders at the very
+            // top of the conversation — the "Metabind Assistant" title (matches iOS).
+            item(key = "header") {
+                Text(
+                    text = "Metabind Assistant",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp)
                 )
             }
         }
@@ -254,41 +271,6 @@ private fun MessageBubble(
 }
 
 @Composable
-private fun ToolStatusHeader(message: ChatMessage) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.padding(bottom = 4.dp)
-    ) {
-        when (message.toolStatus) {
-            ToolStatus.LOADING -> CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            ToolStatus.COMPLETED -> Text(
-                text = "✓",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-            ToolStatus.ERROR -> Text(
-                text = "✗",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-            null -> {}
-        }
-        Text(
-            text = message.toolName ?: "Tool",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
 private fun BindJSToolBubble(
     message: ChatMessage,
     content: ToolUIContent.BindJS,
@@ -355,8 +337,6 @@ private fun BindJSToolBubble(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        ToolStatusHeader(message)
-
         val component = renderedComponent
         if (component != null) {
             CompositionLocalProvider(LocalHostScrollsVertically provides true) {
@@ -404,8 +384,6 @@ private fun HtmlToolBubble(message: ChatMessage, content: ToolUIContent.Html) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        ToolStatusHeader(message)
-
         val heightModifier = contentHeight?.let { Modifier.height(it) } ?: Modifier.height(384.dp)
 
         AndroidView(
@@ -449,12 +427,13 @@ private fun HtmlToolBubble(message: ChatMessage, content: ToolUIContent.Html) {
 @Composable
 private fun UserBubble(message: ChatMessage) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 32.dp),
         horizontalAlignment = Alignment.End
     ) {
         Box(
             modifier = Modifier
-                .widthIn(max = 300.dp)
                 .clip(
                     RoundedCornerShape(
                         topStart = 20.dp,
@@ -484,7 +463,7 @@ private fun AssistantBubble(message: ChatMessage) {
         if (message.content.isNotEmpty()) {
             RichText(
                 modifier = Modifier
-                    .widthIn(max = 320.dp)
+                    .fillMaxWidth()
                     .padding(end = 32.dp)
             ) {
                 Markdown(message.content)
