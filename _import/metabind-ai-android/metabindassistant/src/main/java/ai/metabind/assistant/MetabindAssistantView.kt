@@ -50,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -127,6 +129,23 @@ fun MetabindAssistantView(
         if (messages.isNotEmpty()) listState.smoothScrollToBottom()
     }
 
+    // 0f when the large "Metabind Assistant" title is fully in view at the top,
+    // 1f once it has scrolled completely under the top edge. Drives the collapse
+    // into the pinned, centered compact title bar.
+    val collapseProgress by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val header = info.visibleItemsInfo.firstOrNull { it.key == "header" }
+            if (header == null) {
+                // Header not laid out: either nothing yet (0f) or scrolled past it (1f).
+                if (info.totalItemsCount > 0 && info.visibleItemsInfo.isNotEmpty()) 1f else 0f
+            } else {
+                val hidden = (info.viewportStartOffset - header.offset).coerceAtLeast(0)
+                (hidden.toFloat() / header.size.coerceAtLeast(1)).coerceIn(0f, 1f)
+            }
+        }
+    }
+
     // In-flow layout: the message list takes the remaining space (weight 1f) and
     // CONTRACTS when the input bar rises with the keyboard (imePadding on the root
     // Column), so chat content always stays above the input field — never hidden
@@ -136,12 +155,15 @@ fun MetabindAssistantView(
             .fillMaxSize()
             .imePadding()
     ) {
+      Box(
+          modifier = Modifier
+              .weight(1f)
+              .fillMaxWidth()
+      ) {
         LazyColumn(
             state = listState,
             reverseLayout = true,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -180,7 +202,8 @@ fun MetabindAssistantView(
             }
 
             // reverseLayout = true, so the last-declared item renders at the very
-            // top of the conversation — the "Metabind Assistant" title (matches iOS).
+            // top of the conversation — the large "Metabind Assistant" title that
+            // fades out as it scrolls under the pinned compact title (matches iOS).
             item(key = "header") {
                 Text(
                     text = "Metabind Assistant",
@@ -190,9 +213,33 @@ fun MetabindAssistantView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp)
+                        .graphicsLayer { alpha = 1f - collapseProgress }
                 )
             }
         }
+
+        // Pinned compact title: centered, fades in behind a translucent surface
+        // scrim as the large title scrolls under the top edge. Chat scrolls (and
+        // is faintly visible) underneath it. Fade is driven in the draw phase via
+        // graphicsLayer alpha so scrolling doesn't recompose the bar. It has no
+        // pointer handler, so touches/scroll pass through to the list below.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .graphicsLayer { alpha = collapseProgress }
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+                .padding(vertical = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Metabind Assistant",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+      }
 
         if (error != null) {
             Snackbar(
