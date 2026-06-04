@@ -10,7 +10,8 @@ import java.util.UUID
 enum class MessageRole {
     USER,
     ASSISTANT,
-    TOOL
+    TOOL,
+    ERROR
 }
 
 enum class ToolStatus {

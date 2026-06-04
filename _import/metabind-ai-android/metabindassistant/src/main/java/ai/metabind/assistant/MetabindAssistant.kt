@@ -119,7 +119,12 @@ class MetabindAssistant(
             try {
                 streamAgentResponse()
             } catch (e: Exception) {
-                _error.value = e.message ?: "Something went wrong"
+                val message = e.message ?: "Something went wrong"
+                _error.value = message
+                _messages.value = _messages.value + ChatMessage(
+                    role = MessageRole.ERROR,
+                    content = message
+                )
             } finally {
                 _isLoading.value = false
             }

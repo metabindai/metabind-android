@@ -42,7 +42,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -112,7 +111,6 @@ fun MetabindAssistantView(
 ) {
     val messages by assistant.messages.collectAsState()
     val isLoading by assistant.isLoading.collectAsState()
-    val error by assistant.error.collectAsState()
     val toolUIContent by assistant.toolUIContent.collectAsState()
     var inputText by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -241,20 +239,6 @@ fun MetabindAssistantView(
         }
       }
 
-        if (error != null) {
-            Snackbar(
-                modifier = Modifier.padding(16.dp),
-                action = null,
-                dismissAction = null
-            ) {
-                Text(error ?: "")
-            }
-            LaunchedEffect(error) {
-                kotlinx.coroutines.delay(3000)
-                assistant.clearError()
-            }
-        }
-
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         ChatInputBar(
@@ -305,6 +289,7 @@ private fun MessageBubble(
     when (message.role) {
         MessageRole.USER -> UserBubble(message)
         MessageRole.ASSISTANT -> AssistantBubble(message)
+        MessageRole.ERROR -> ErrorBubble(message)
         MessageRole.TOOL -> {
             when (toolUIContent) {
                 is ToolUIContent.BindJS -> BindJSToolBubble(
@@ -515,6 +500,29 @@ private fun AssistantBubble(message: ChatMessage) {
             ) {
                 Markdown(message.content)
             }
+        }
+    }
+}
+
+@Composable
+private fun ErrorBubble(message: ChatMessage) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(end = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = message.content,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
