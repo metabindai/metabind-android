@@ -20,6 +20,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 class PreviewViewModel(
     application: Application,
@@ -33,6 +37,10 @@ class PreviewViewModel(
     companion object {
         private const val TAG = "PreviewViewModel"
     }
+
+    private val jsCallMutex = Mutex()
+    private val rerenderScheduled = AtomicBoolean(false)
+    private val pendingDragData = AtomicReference<Pair<String, Array<Any>>?>(null)
 
     fun loadContent(contentId: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -80,7 +88,7 @@ class PreviewViewModel(
             is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
             is UiEvent.OnTap -> callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            is UiEvent.OnDrag -> callEventHandler(event.handlerId, arrayOf(event.state))
+            is UiEvent.OnDrag -> callDragEventHandler(event.handlerId, arrayOf(event.state))
             else -> {}
         }
     }
@@ -88,14 +96,54 @@ class PreviewViewModel(
     private fun callEventHandler(handlerId: String, data: Array<Any> = emptyArray()) {
         (_uiState.value as? UiState.Success)?.let { state ->
             viewModelScope.launch(Dispatchers.IO) {
-                Log.d(TAG, "Call eventHandler. $handlerId")
-                jsRuntime.callEventHandler(handlerId, data)
+                jsCallMutex.withLock {
+                    Log.d(TAG, "Call eventHandler. $handlerId")
+                    jsRuntime.callEventHandler(handlerId, data)
+                    scheduleRerender(state)
+                }
+            }
+        }
+    }
+
+    /** Coalesce rerenders. */
+    private suspend fun scheduleRerender(state: UiState.Success) {
+        if (!rerenderScheduled.compareAndSet(false, true)) {
+            Log.d(TAG, "RERENDER_COALESCED")
+            return // Already scheduled, coalesce
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                kotlinx.coroutines.yield() // Allow more events to coalesce
+                // Re-read current state to avoid overwriting newer updates
+                val current = _uiState.value as? UiState.Success ?: return@launch
+                val startTime = System.currentTimeMillis()
                 jsRuntime.willRender()
-                val component = jsRuntime.callComponent(state.componentName)
-                _uiState.value = state.copy(
+                val component = jsRuntime.callComponent(current.componentName)
+                _uiState.value = current.copy(
                     component = component,
-                    componentVersion = state.componentVersion + 1
+                    componentVersion = current.componentVersion + 1
                 )
+                Log.d(TAG, "RERENDER_COMPLETE took=${System.currentTimeMillis() - startTime}ms")
+            } catch (e: Exception) {
+                Log.e(TAG, "Rerender failed", e)
+            } finally {
+                rerenderScheduled.set(false)
+            }
+        }
+    }
+
+    /** Optimized drag handler using latest-wins pattern. */
+    private fun callDragEventHandler(handlerId: String, data: Array<Any>) {
+        pendingDragData.set(handlerId to data)
+        (_uiState.value as? UiState.Success)?.let { state ->
+            viewModelScope.launch(Dispatchers.IO) {
+                jsCallMutex.withLock {
+                    val latestDrag = pendingDragData.getAndSet(null) ?: return@withLock
+                    val startTime = System.currentTimeMillis()
+                    jsRuntime.callEventHandler(latestDrag.first, latestDrag.second)
+                    Log.d(TAG, "EVENT_JS_DONE handler=drag took=${System.currentTimeMillis() - startTime}ms")
+                    scheduleRerender(state)
+                }
             }
         }
     }
@@ -103,15 +151,8 @@ class PreviewViewModel(
     /** Re-render in response to a JS-driven (deferred) state change. */
     private suspend fun rerenderFromJs() {
         val state = _uiState.value as? UiState.Success ?: return
-        try {
-            jsRuntime.willRender()
-            val component = jsRuntime.callComponent(state.componentName)
-            _uiState.value = state.copy(
-                component = component,
-                componentVersion = state.componentVersion + 1
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "rerender failed", e)
+        jsCallMutex.withLock {
+            scheduleRerender(state)
         }
     }
 
