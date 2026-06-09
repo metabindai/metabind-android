@@ -43,8 +43,7 @@ fun KeyEntryScreen(
 
     val submit = {
         if (apiKey.isNotBlank()) {
-            viewModel.setApiKey(apiKey)
-            onNavigateToHome()
+            viewModel.saveApiKey(apiKey, onNavigateToHome)
         }
     }
 

@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.richtext.commonmark)
     implementation(libs.richtext.ui.material3)
+    implementation(libs.androidx.datastore.preferences)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

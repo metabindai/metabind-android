@@ -35,7 +35,7 @@ app/src/main/java/ai/metabind/assistant/demo/
   MainActivity.kt                  — single-activity Compose host
   MetabindAssistantDemoApp.kt      — Hilt @HiltAndroidApp entry
   data/
-    ApiKeyRepository.kt            — in-memory only, NEVER persisted
+    ApiKeyRepository.kt            — persisted via Jetpack DataStore (Preferences), cached in-memory for sync reads
     SdkModule.kt                   — Hilt @Module providing MetabindAgentProvider
   navigation/AppNavigation.kt      — KeyEntry → Home
   ui/screens/
