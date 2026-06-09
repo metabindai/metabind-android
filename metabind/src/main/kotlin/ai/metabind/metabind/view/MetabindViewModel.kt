@@ -99,6 +99,10 @@ class MetabindViewModel(
         when (event) {
             is UiEvent.OnAppear -> callEventHandler(event.handlerId)
             is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
+            is UiEvent.OnChange -> callEventHandler(
+                event.handlerId,
+                arrayOf(event.oldValue ?: "", event.newValue ?: "")
+            )
             is UiEvent.OnTap -> callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
             is UiEvent.OnDrag -> callEventHandler(event.handlerId, arrayOf(event.state))
