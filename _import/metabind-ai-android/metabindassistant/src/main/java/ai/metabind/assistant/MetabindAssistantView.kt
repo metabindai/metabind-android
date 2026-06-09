@@ -654,6 +654,10 @@ private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: Ui
             is UiEvent.OnTap -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnAppear -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnDisappear -> jsRuntime.callEventHandler(event.handlerId)
+            is UiEvent.OnChange -> jsRuntime.callEventHandler(
+                event.handlerId,
+                arrayOf(event.oldValue ?: "", event.newValue ?: "")
+            )
             is UiEvent.OnLongPress -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnSwitch -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.checked))
             is UiEvent.OnDrag -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.state))
