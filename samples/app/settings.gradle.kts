@@ -40,3 +40,9 @@ include(
     ":feature-home",
 )
 include(":dynamicfeature")
+
+//includeBuild("../metabind-android") {
+//    dependencySubstitution {
+//        substitute(module("ai.metabind:metabind-android")).using(project(":metabind"))
+//    }
+//}
