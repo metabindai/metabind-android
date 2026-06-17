@@ -47,6 +47,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -311,15 +312,23 @@ private fun BindJSToolBubble(
     onCallTool: suspend (String, Map<String, Any?>) -> Any?,
 ) {
     val context = LocalContext.current
-    val jsRuntime = remember { JsRuntimeImpl.getInstance(context.applicationContext) }
+    // Each tool bubble gets its own isolate: a shared runtime would let sibling
+    // bubbles overwrite each other's handler table, hook state, rerender
+    // listener and mcpHost — so rendering a new bubble freezes the older ones.
+    val jsRuntime = remember { JsRuntimeImpl.create(context.applicationContext) }
+    DisposableEffect(jsRuntime) {
+        onDispose { jsRuntime.close() }
+    }
     var renderedComponent by remember { mutableStateOf<BaseComponent<*>?>(null) }
     var version by remember { mutableIntStateOf(0) }
     val coroutineScope = rememberCoroutineScope()
 
     suspend fun rerender() {
         try {
-            jsRuntime.willRender()
-            val next = jsRuntime.callComponent(
+            // Atomic willRender + callComponent (see JsRuntime.renderComponent):
+            // splitting the pair lets concurrent re-renders corrupt the shared
+            // JS hook state and handlers stop firing.
+            val next = jsRuntime.renderComponent(
                 content.layoutComponentName,
                 jsonObjectToMap(content.toolArguments),
             )
@@ -354,8 +363,7 @@ private fun BindJSToolBubble(
                     toolResult = content.toolResultText
                 )
             )
-            jsRuntime.willRender()
-            renderedComponent = jsRuntime.callComponent(
+            renderedComponent = jsRuntime.renderComponent(
                 content.layoutComponentName,
                 jsonObjectToMap(content.toolArguments),
             )
