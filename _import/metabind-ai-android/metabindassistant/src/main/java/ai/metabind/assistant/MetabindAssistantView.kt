@@ -318,8 +318,10 @@ private fun BindJSToolBubble(
 
     suspend fun rerender() {
         try {
-            jsRuntime.willRender()
-            val next = jsRuntime.callComponent(
+            // Atomic willRender + callComponent (see JsRuntime.renderComponent):
+            // splitting the pair lets concurrent re-renders corrupt the shared
+            // JS hook state and handlers stop firing.
+            val next = jsRuntime.renderComponent(
                 content.layoutComponentName,
                 jsonObjectToMap(content.toolArguments),
             )
@@ -354,8 +356,7 @@ private fun BindJSToolBubble(
                     toolResult = content.toolResultText
                 )
             )
-            jsRuntime.willRender()
-            renderedComponent = jsRuntime.callComponent(
+            renderedComponent = jsRuntime.renderComponent(
                 content.layoutComponentName,
                 jsonObjectToMap(content.toolArguments),
             )
