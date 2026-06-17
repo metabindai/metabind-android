@@ -90,8 +90,7 @@ class PreviewViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call eventHandler. $handlerId")
                 jsRuntime.callEventHandler(handlerId, data)
-                jsRuntime.willRender()
-                val component = jsRuntime.callComponent(state.componentName)
+                val component = jsRuntime.renderComponent(state.componentName)
                 _uiState.value = state.copy(
                     component = component,
                     componentVersion = state.componentVersion + 1
@@ -104,8 +103,7 @@ class PreviewViewModel(
     private suspend fun rerenderFromJs() {
         val state = _uiState.value as? UiState.Success ?: return
         try {
-            jsRuntime.willRender()
-            val component = jsRuntime.callComponent(state.componentName)
+            val component = jsRuntime.renderComponent(state.componentName)
             _uiState.value = state.copy(
                 component = component,
                 componentVersion = state.componentVersion + 1
