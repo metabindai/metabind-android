@@ -131,7 +131,6 @@ class MetabindViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call callPickerSetter. $setterId $value")
                 jsRuntime.callPickerSetter(setterId, value)
-                jsRuntime.willRender()
                 val component = renderComponent(state.componentName, state.isContent)
                 _uiState.value = state.copy(
                     component = component,
@@ -146,7 +145,6 @@ class MetabindViewModel(
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call eventHandler. $handlerId")
                 jsRuntime.callEventHandler(handlerId, data)
-                jsRuntime.willRender()
                 val component = renderComponent(state.componentName, state.isContent)
                 _uiState.value = state.copy(
                     component = component,
@@ -160,7 +158,6 @@ class MetabindViewModel(
     private suspend fun rerenderFromJs() {
         val state = _uiState.value as? UiState.Success ?: return
         try {
-            jsRuntime.willRender()
             val component = renderComponent(state.componentName, state.isContent)
             _uiState.value = state.copy(
                 component = component,
@@ -171,11 +168,14 @@ class MetabindViewModel(
         }
     }
 
+    // Atomic willRender + component call (see JsRuntime.renderComponent): the
+    // pair must not be split, or concurrent drag re-renders corrupt the shared
+    // JS hook state and handlers stop firing.
     private suspend fun renderComponent(name: String, isContent: Boolean): BaseComponent<*> =
         if (isContent) {
-            jsRuntime.callComponent(name)
+            jsRuntime.renderComponent(name)
         } else {
-            jsRuntime.callComponentPreview(name, 0)
+            jsRuntime.renderComponentPreview(name, 0)
         }
 
     sealed class UiState {
