@@ -17,7 +17,7 @@ material3 = "1.4.0"
 kotlinxSerializationJson = "1.8.1"
 richtext = "1.0.0-alpha01"
 datastore = "1.1.1"
-metabindAssistant = "0.1.8"
+metabindAssistant = "0.1.11"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
