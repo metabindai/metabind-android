@@ -105,7 +105,10 @@ class MetabindViewModel(
             )
             is UiEvent.OnTap -> callEventHandler(event.handlerId)
             is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            is UiEvent.OnDrag -> callEventHandler(event.handlerId, arrayOf(event.state))
+            // Drags are coalesced + serialized inside bindjs (latest-wins on the
+            // `changed` phase) and drive their own re-render via the listener set
+            // in loadContent, so don't queue an explicit handler+render per event.
+            is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)
             is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
             is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
             is UiEvent.OnSwitch -> callEventHandler(event.handlerId, arrayOf(event.checked))
