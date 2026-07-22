@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space0_25x">2dp</dimen>
+    <dimen name="space0_5x">4dp</dimen>
+    <dimen name="space1x">8dp</dimen>
+    <dimen name="space1_25x">10dp</dimen>
+    <dimen name="space1_5x">12dp</dimen>
+    <dimen name="space2x">16dp</dimen>
+    <dimen name="space2_5x">20dp</dimen>
+    <dimen name="space3x">24dp</dimen>
+    <dimen name="space4x">32dp</dimen>
+    <dimen name="space6x">48dp</dimen>
+    <dimen name="bubble_max_width">300dp</dimen>
+    <dimen name="assistant_max_width">320dp</dimen>
+</resources>
