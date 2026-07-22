@@ -1,0 +1,306 @@
+[
+  {
+    "style": "light",
+    "title": "Change the world from here\n",
+    "id": "page-1",
+    "addIndex": 0,
+    "sections": [
+      {
+        "canMove": false,
+        "id": "f8d94c08-432d-4a56-83bd-25e9e00d1a70",
+        "type": "message-header",
+        "canDelete": false,
+        "props": {
+          "title": "Change the world from here\n",
+          "caption": "MON 13 JAN, 10:15 AM",
+          "coverImage": {
+            "dimensions": {
+              "height": 1752,
+              "width": 2626
+            },
+            "src": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-5d930626-9bb5-4669-ae50-5de4158883c6-usfca-apply-3.png?alt=media&token=14f52de1-1c25-4feb-a9fb-3590c60adcdb",
+            "contentMode": "cover"
+          },
+          "titleStyle": "titleHeader"
+        }
+      },
+      {
+        "type": "institution",
+        "canDelete": false,
+        "props": {
+          "subtitle": "Someplace, Somewhere",
+          "title": "Generic University",
+          "iconURL": "https://firebasestorage.googleapis.com/v0/b/cb-prototype-4e3e7.appspot.com/o/gu-logo-square.png?alt=media&token=096c8f66-1420-4992-a326-33a3084ad591"
+        },
+        "id": "65ae3216-27db-4cf6-8b17-a37b5ef8e70b",
+        "canMove": false
+      },
+      {
+        "props": {
+          "title": "Use your education to make a positive impact — all while living in a city known for innovation.",
+          "align": "left",
+          "style": "h2"
+        },
+        "id": "34c03f9d-8251-444f-b62f-919434fa1588",
+        "type": "paragraph"
+      },
+      {
+        "props": {
+          "thumbnailTime": "3",
+          "dimensions": {
+            "width": 1280,
+            "height": 720
+          },
+          "title": "Change the World From Here",
+          "assetTitle": "USF School of Law_  Change the World From Here",
+          "sectionId": "267d9746-cb52-4636-84a2-6008a2d0a1ec",
+          "src": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-7c16059a-1969-43f6-9d69-a4ded588c1dd-USF%20School%20of%20Law_%20%20Change%20the%20World%20From%20Here.mp4?alt=media&token=82e47a89-486c-4eda-918e-436ec2f656f8",
+          "fullbleed": false
+        },
+        "type": "video",
+        "id": "267d9746-cb52-4636-84a2-6008a2d0a1ec"
+      },
+      {
+        "props": {
+          "style": "body",
+          "align": "left",
+          "title": "We can't wait to get to know you better, and we hope you'll apply to the University of San Francisco. In the meantime, we recommend taking a virtual tour or dropping by for a campus visit and meeting some of our students and staff who will support you when you get here. If you have any questions, don't hesitate to reach out to your admission counselor. We're here to help and can answer any questions, big or small.\n"
+        },
+        "id": "adcce480-95fd-428b-9bb7-419ca4dc7b6d",
+        "type": "paragraph"
+      },
+      {
+        "props": {
+          "title": "Our Campus",
+          "style": "h2",
+          "align": "left"
+        },
+        "id": "2ef66bcc-b453-4d4d-b32d-9b2b47ca2f69",
+        "type": "paragraph"
+      },
+      {
+        "type": "gallery",
+        "props": {
+          "images": [
+            {
+              "dimensions": {
+                "height": 1600,
+                "width": 2560
+              },
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-bcb58ce0-6362-4bf4-b87c-69e7eefd1d24-university-san-francisco_234_gallery2.jpg?alt=media&token=88724e82-2ff1-461a-8c56-74397bddc3b7",
+              "title": "university-san-francisco_234_gallery2",
+              "description": "Students in lab coats in a science class with a blurred molecule in the foreground",
+              "footnote": "Experience our incredible science facilities."
+            },
+            {
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-2de6892b-fc12-41e4-9457-de8dd4cb9976-university-san-francisco_234_gallery3.jpg?alt=media&token=d1e1c5e4-bab5-486d-8513-b942f4ad17d6",
+              "dimensions": {
+                "height": 1600,
+                "width": 2560
+              },
+              "title": "university-san-francisco_234_gallery3"
+            },
+            {
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-b924af9a-9e83-4b30-b2d0-fb32065c1e49-university-san-francisco_234_gallery1.jpg?alt=media&token=845a1e1d-6b14-4b40-9304-d6b832dd3aac",
+              "dimensions": {
+                "height": 810,
+                "width": 1440
+              },
+              "title": "university-san-francisco_234_gallery1"
+            },
+            {
+              "title": "university-san-francisco_234_gallery4",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-b0c93757-68df-4eb3-85fa-8e971f4b1207-university-san-francisco_234_gallery4.jpg?alt=media&token=bc4a6d2c-1295-4ba6-ae37-af3ede731da1",
+              "dimensions": {
+                "width": 2560,
+                "height": 1600
+              }
+            },
+            {
+              "title": "university-san-francisco_234_gallery5",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-cf6df1e8-d13e-4f6b-a6d8-d5bbf728b080-university-san-francisco_234_gallery5.jpg?alt=media&token=9f204d81-fdfc-4b24-bcf9-ea9f3c039d4c",
+              "dimensions": {
+                "width": 1440,
+                "height": 810
+              }
+            },
+            {
+              "title": "university-san-francisco_234_gallery6",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-b0aada0f-1328-45a0-9e70-8970f95e54b4-university-san-francisco_234_gallery6.jpg?alt=media&token=75f46d54-87b6-4e97-bc9a-5a38ea01ae49",
+              "dimensions": {
+                "width": 2560,
+                "height": 1600
+              }
+            },
+            {
+              "dimensions": {
+                "height": 1600,
+                "width": 2560
+              },
+              "title": "university-san-francisco_234_gallery7",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-a87e6b39-3483-4d33-a3cc-11d13d9e4635-university-san-francisco_234_gallery7.jpg?alt=media&token=3d808209-f6a4-4319-9022-cbda33e1ee83"
+            },
+            {
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-13a7b021-dcc9-4876-a230-444fb4f3d7b4-university-san-francisco_234_gallery8.jpg?alt=media&token=35ce942b-b5d8-47f6-b790-283cb93470c7",
+              "dimensions": {
+                "height": 1600,
+                "width": 2560
+              },
+              "title": "university-san-francisco_234_gallery8"
+            }
+          ],
+          "sectionId": "dcf05ec4-aa13-4e58-b524-2437367f67a9"
+        },
+        "id": "dcf05ec4-aa13-4e58-b524-2437367f67a9"
+      },
+      {
+        "id": "02906e0b-1443-464f-89f3-c5c303229216",
+        "type": "paragraph",
+        "props": {
+          "align": "left",
+          "title": "The main campus of the University of San Francisco, \"the Hilltop\" is located in the geographic center of the city. Our hilltop campus is divided between two adjacent plots: Lone Mountain and lower campus. Spread across 55-acres, separated by Turk Street in San Francisco’s Inner Richmond neighborhood, the hilltop campus is home to five schools and a vibrant community of students inspired to change the world from here.\n",
+          "style": "body"
+        }
+      },
+      {
+        "props": {
+          "style": "h2",
+          "align": "left",
+          "title": "Life at USF"
+        },
+        "id": "6fc49fd3-8490-4307-b43d-9c0d5c7a3eb1",
+        "type": "paragraph"
+      },
+      {
+        "props": {
+          "style": "body",
+          "align": "left",
+          "title": "Find your people in your residence hall. Find your fun in a club or in a club sport. Follow your passions with the help of mentors, professors, and peers who help you find, then reach, your goals. Start your next chapter on the Hilltop. "
+        },
+        "id": "e6a49725-93e4-4b53-9d2b-2adc3af52a88",
+        "type": "paragraph"
+      },
+      {
+        "props": {
+          "sectionId": "af74b3f3-5787-4786-8b79-959df4caf4e4",
+          "images": [
+            {
+              "title": "university-san-francisco_234_gallery4",
+              "dimensions": {
+                "width": 2560,
+                "height": 1600
+              },
+              "footnote": "Find your people in your residence hall",
+              "description": "Friends sitting next to each other in a dorm room.",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-b0c93757-68df-4eb3-85fa-8e971f4b1207-university-san-francisco_234_gallery4.jpg?alt=media&token=bc4a6d2c-1295-4ba6-ae37-af3ede731da1"
+            },
+            {
+              "footnote": "Find your fun in a club or in a club sport",
+              "dimensions": {
+                "width": 2098,
+                "height": 2622
+              },
+              "description": "Sports team on each others shoulders",
+              "title": "ucla-apply-1",
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-e28cb7d1-0112-4710-a9eb-51e70f6fa88e-ucla-apply-1.png?alt=media&token=4cd343ef-ceb2-4fee-9010-53cd4d663af1"
+            },
+            {
+              "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-1b4f4fdc-91f1-47fb-b3b3-f7e87d3b9b3d-cb-logo-header-123.png?alt=media&token=9ad8f7da-ccb9-4c40-bb88-4c4c888e4312",
+              "title": "cb-logo-header-123",
+              "dimensions": {
+                "height": 2048,
+                "width": 2048
+              },
+              "description": "Woman wearing a graduation hat blowing confetti ",
+              "footnote": "Follow your passions"
+            }
+          ]
+        },
+        "id": "af74b3f3-5787-4786-8b79-959df4caf4e4",
+        "type": "gallery"
+      },
+      {
+        "type": "paragraph",
+        "id": "5697079a-fed2-4e14-8c28-9c00f9c1e8d3",
+        "props": {
+          "title": "Scholarship Opportunities",
+          "style": "h2",
+          "align": "left"
+        }
+      },
+      {
+        "type": "paragraph",
+        "id": "eee03bd0-e041-4766-946f-d76e2941b2fa",
+        "props": {
+          "title": "All first year and transfer applicants are automatically considered for merit scholarships.\n\nA note on financial aid: We encourage you to use our net price calculator to estimate the financial aid that may be available to you and the net cost of attendance for a new first-year or transfer undergraduate student. If you plan on applying for financial aid, familiarize yourself with the required financial aid forms. We'll need these completed forms in order to prepare a financial aid package for you. If you have any questions, you can email us at financialaid@usfca.edu.\n\nGo Dons!\n",
+          "align": "left",
+          "style": "body"
+        },
+        "canMove": true,
+        "canDelete": true
+      },
+      {
+        "type": "image",
+        "id": "40a4e355-e533-45b5-8640-5818424d9800",
+        "props": {
+          "fullbleed": true,
+          "aspect": "original",
+          "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-c8e27d79-59ec-426d-bc15-df3c893d5550-usfca-cable-car.png?alt=media&token=d35124e4-6c06-45f4-b88f-0f0bbb39a24b"
+        }
+      },
+      {
+        "props": {
+          "title": "Visit Us",
+          "style": "h2",
+          "align": "left"
+        },
+        "type": "paragraph",
+        "id": "1fef60dd-9390-41b7-a5e7-dfd5db660646"
+      },
+      {
+        "props": {
+          "style": "body",
+          "align": "left",
+          "title": "We hope you and your family will visit us and immerse yourselves in our university and city. Our location, in the geographic center of San Francisco, is a big part of the student experience. Our admission team will take you around our 55-acre Hilltop campus to show you the classrooms, residence halls, and study spots that will be a part of your life as a Don. We offer daily student-guided tours, group visits, a fall open house for prospective students, and special events for admitted students (both first-year and transfer). Schedule a visit today - we know you’ll love it once you get here.\n"
+        },
+        "type": "paragraph",
+        "id": "946d9fe7-dd10-4c14-88c5-c1dae2444b79"
+      },
+      {
+        "props": {
+          "url": "https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-3a333afe-ad67-4c63-a614-4387a016176a-usfca-apply-5.png?alt=media&token=df2ed508-afeb-460c-8094-1bcff0b86390"
+        },
+        "type": "image",
+        "id": "b4002386-16fe-4ecd-97ab-c7d758eda309"
+      },
+      {
+        "type": "paragraph",
+        "props": {
+          "style": "h2",
+          "title": "Important Dates",
+          "align": "left"
+        },
+        "id": "70f705cf-20ce-4922-9254-68ea499834f9"
+      },
+      {
+        "type": "calendar",
+        "id": "b082f09f-0eea-4405-b9f7-acf400d46989",
+        "props": {
+          "date": "2024-10-31T13:00:00.000Z",
+          "sectionId": "b082f09f-0eea-4405-b9f7-acf400d46989",
+          "title": "Application Deadline"
+        }
+      },
+      {
+        "canMove": false,
+        "type": "action",
+        "id": "f8b6c40c-24a4-4c38-8fa2-2b368de0d708",
+        "props": {
+          "title": "Apply Today!",
+          "url": "https://www.usfca.edu/admission/undergraduate/apply-to-usf"
+        },
+        "canDelete": false
+      }
+    ]
+  }
+]
