@@ -1,9 +1,16 @@
 [versions]
+# Unified version for all published Metabind libraries
+# (metabind-content-android, mcpappshost-android, metabindai-android).
+metabind = "0.2.0"
+
+# Toolchain / SDK
+agp = "9.0.1"
+kotlin = "2.3.10"
 android-compile-sdk = "36"
 android-min-sdk = "26"
 android-target-sdk = "36"
-agp = "9.0.1"
-kotlin = "2.3.10"
+
+# Content SDK (:metabind-content)
 coreKtx = "1.17.0"
 material = "1.13.0"
 activityKtx = "1.12.4"
@@ -12,9 +19,19 @@ gson = "2.13.2"
 android-compose = "1.10.4"
 apollo = "4.4.1"
 lifecycleViewmodelCompose = "2.9.1"
+
+# BindJS (published GitHub Packages artifact, kept separate)
 bindjs = "0.0.20"
 
+# AI SDK (:mcpappshost, :metabindai)
+okhttp = "4.12.0"
+kotlinxCoroutines = "1.10.2"
+kotlinxSerializationJson = "1.8.1"
+composeBom = "2026.02.01"
+richtext = "1.0.0-alpha01"
+
 [libraries]
+# Content SDK
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityKtx" }
@@ -27,10 +44,28 @@ lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel
 apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
 apollo-cache = { group = "com.apollographql.apollo", name = "apollo-normalized-cache-sqlite", version.ref = "apollo" }
 apollo-normalized-cache = { group = "com.apollographql.apollo", name = "apollo-normalized-cache", version.ref = "apollo" }
+
+# BindJS
 bindjs = { group = "ai.metabind", name = "bindjs-android", version.ref = "bindjs" }
+
+# AI SDK
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-sse = { group = "com.squareup.okhttp3", name = "okhttp-sse", version.ref = "okhttp" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+richtext-commonmark = { group = "com.halilibo.compose-richtext", name = "richtext-commonmark", version.ref = "richtext" }
+richtext-ui-material3 = { group = "com.halilibo.compose-richtext", name = "richtext-ui-material3", version.ref = "richtext" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }

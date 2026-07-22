@@ -41,8 +41,11 @@ include(
 )
 include(":dynamicfeature")
 
-//includeBuild("../metabind-android") {
-//    dependencySubstitution {
-//        substitute(module("ai.metabind:metabind-android")).using(project(":metabind"))
-//    }
-//}
+// Build the content SDK from the monorepo sources instead of the published artifact.
+// To build this sample standalone against the published SDK, comment this out and set
+// the `metabind` version in gradle/libs.versions.toml to the desired published version.
+includeBuild("../..") {
+    dependencySubstitution {
+        substitute(module("ai.metabind:metabind-content-android")).using(project(":metabind-content"))
+    }
+}

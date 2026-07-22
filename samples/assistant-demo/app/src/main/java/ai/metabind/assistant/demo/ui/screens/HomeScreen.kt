@@ -5,7 +5,7 @@
  */
 package ai.metabind.assistant.demo.ui.screens
 
-import ai.metabind.assistant.MetabindAssistantView
+import ai.metabind.ai.MetabindAssistantView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

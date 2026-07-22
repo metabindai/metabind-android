@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.maven
-
 pluginManagement {
     repositories {
         google {
@@ -22,6 +20,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
+        // BindJS is consumed as a published GitHub Packages artifact and kept in its
+        // own repo (bindjs-android / bindjs-android-binary), exactly like bindjs-apple-binary.
         maven {
             url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {
@@ -33,9 +33,13 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "metabind-android"
-include(":app")
-include(":metabind")
 
+// Published libraries
+include(":metabind-content")
+include(":mcpappshost")
+include(":metabindai")
+
+// To develop against a local checkout of BindJS, uncomment and point at ../bindjs-android:
 //includeBuild("../bindjs-android") {
 //    dependencySubstitution {
 //        substitute(module("ai.metabind:bindjs-android")).using(project(":bindjs"))

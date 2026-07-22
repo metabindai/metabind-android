@@ -5,7 +5,7 @@
  */
 package ai.metabind.assistant.demo.ui.screens
 
-import ai.metabind.assistant.MetabindAssistant
+import ai.metabind.ai.MetabindAssistant
 import ai.metabind.assistant.demo.BuildConfig
 import ai.metabind.assistant.demo.data.ApiKeyRepository
 import androidx.lifecycle.ViewModel

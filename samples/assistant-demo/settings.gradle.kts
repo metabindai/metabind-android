@@ -40,10 +40,12 @@ dependencyResolutionManagement {
 rootProject.name = "metabind-assistant-demo"
 include(":app")
 
-// Uncomment to develop against a local checkout of metabind-ai-android:
-//includeBuild("../metabind-ai-android") {
-//    dependencySubstitution {
-//        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
-//        substitute(module("ai.metabind:metabind-assistant-android")).using(project(":metabindassistant"))
-//    }
-//}
+// Build the AI SDK from the monorepo sources instead of the published artifacts.
+// To build this sample standalone against the published SDK, comment this out and set
+// the `metabindAssistant` version in gradle/libs.versions.toml to the desired published version.
+includeBuild("../..") {
+    dependencySubstitution {
+        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
+        substitute(module("ai.metabind:metabindai-android")).using(project(":metabindai"))
+    }
+}

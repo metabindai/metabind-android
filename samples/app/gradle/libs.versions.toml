@@ -19,7 +19,7 @@ javascriptengine = "1.0.0"
 room = "2.8.4"
 camerax = "1.6.0"
 mlkit-barcode-scanning = "17.3.0"
-metabind = "0.0.18"
+metabind = "0.2.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
@@ -70,7 +70,7 @@ javascriptengine = { module = "androidx.javascriptengine:javascriptengine", vers
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
-metabind = { group = "ai.metabind", name = "metabind-android", version.ref = "metabind" }
+metabind = { group = "ai.metabind", name = "metabind-content-android", version.ref = "metabind" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

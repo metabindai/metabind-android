@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# The build resolves BindJS (and, in samples, the SDK version metadata) from GitHub
+# Packages using the workflow's GITHUB_TOKEN.
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and test libraries
+        run: ./gradlew build test --stacktrace
+
+      - name: Publish libraries to Maven local
+        run: ./gradlew publishToMavenLocal --stacktrace
+
+      - name: Assemble sample - app
+        working-directory: samples/app
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Assemble sample - assistant-demo
+        working-directory: samples/assistant-demo
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+  publish:
+    # Publishes the three libraries at the unified version to GitHub Packages.
+    # Runs only on manual dispatch or a version tag.
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish to GitHub Packages
+        run: ./gradlew publish --stacktrace
