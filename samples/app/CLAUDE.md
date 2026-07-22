@@ -2,9 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+This is the `app` sample inside the `metabind-android` monorepo (`samples/app`). It is its
+own Gradle build and, by default, builds against the in-tree content SDK via
+`includeBuild("../..")` + a dependency substitution of `ai.metabind:metabind-content-android`
+onto `:metabind-content` (see `settings.gradle.kts`).
+
 ## Project Overview
 
-Metabind App Android is an Android demo app that renders dynamic UI components from the Metabind service. It uses the external Metabind library (`ai.metabind:metabind-android`) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
+Metabind App Android is an Android demo app that renders dynamic UI components from the Metabind service. It uses the Metabind content library (`ai.metabind:metabind-content-android`) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
 
 ## Build Commands
 
@@ -42,7 +47,7 @@ The project uses a multi-module architecture organized by feature and layer:
 
 ### Metabind Integration
 
-The app uses the external `ai.metabind:metabind-android` library (hosted on GitHub Packages) to render dynamic UI components:
+The app uses the `ai.metabind:metabind-content-android` library (built from the monorepo's `:metabind-content` module via composite build; resolvable from GitHub Packages when built standalone) to render dynamic UI components:
 
 - **`MetabindView`** (feature-home/DetailScreen.kt): Renders a full component by content ID with real-time subscription support
 - **`ThumbnailView`** (feature-home/RecentsScreen.kt): Renders component thumbnails in the recents list
@@ -102,7 +107,7 @@ ViewModels follow a consistent pattern with delegates:
 - **Jetpack Compose** (1.9.4) for UI with **Material3**
 - **Compose Compiler Plugin** for Compose integration
 - **Dagger Hilt** (2.58) for dependency injection
-- **Metabind** (0.0.3) for dynamic component rendering
+- **Metabind Content** (`metabind-content-android`, unified 0.2.0) for dynamic component rendering
 - **Room** (2.8.3) for local persistence
 - **Gson** for JSON serialization
 - **Timber** for logging
@@ -122,7 +127,7 @@ app
     ├── base-ui
     ├── base-theme
     ├── data-home (Room database)
-    ├── metabind (external library)
+    ├── metabind-content (SDK library, in-tree via composite build)
     ├── CameraX / ML Kit / Coil
     └── Media3
 ```

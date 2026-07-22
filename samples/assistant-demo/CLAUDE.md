@@ -2,31 +2,38 @@
 
 Context for agents working in this repo. Read together with `README.md` (user-facing) — this file is the developer/internals view.
 
+This is the `assistant-demo` sample inside the `metabind-android` monorepo
+(`samples/assistant-demo`). It is its own Gradle build; see the composite-build wiring below.
+
 ## What this app is
 
-A Jetpack Compose chat app demoing the **`metabind-assistant-android`** SDK. The user types a message, an LLM (via the Metabind Agent proxy) streams a reply and emits MCP tool calls; for tools that declare a `ui` resource, the app fetches the resource and renders it natively via **BindJS** (Compose-native JS-driven UI) — or in a sandboxed `WebView` for `text/html` resources.
+A Jetpack Compose chat app demoing the **`metabindai-android`** SDK (module `:metabindai`, package `ai.metabind.ai`). The user types a message, an LLM (via the Metabind Agent proxy) streams a reply and emits MCP tool calls; for tools that declare a `ui` resource, the app fetches the resource and renders it natively via **BindJS** (Compose-native JS-driven UI) — or in a sandboxed `WebView` for `text/html` resources.
 
 No upstream LLM credentials ship in the binary. One Metabind API key authenticates both the MCP server and the agent proxy.
 
-## Sibling repos (live source, do NOT decompile JARs)
+## SDK source (live source, do NOT decompile JARs)
 
-This app builds against published binaries by default, but `settings.gradle.kts` is wired with active `includeBuild` composite-build substitutions. The chain is:
+By default this sample builds the AI SDK from the monorepo sources. `settings.gradle.kts` is wired with an active `includeBuild` composite-build substitution onto the monorepo root:
 
 ```
-metabind-assistant-demo-android   (this repo)
-  └── includeBuild("../metabind-ai-android")
-        ├── substitutes ai.metabind:metabind-assistant-android → :metabindassistant
-        └── includeBuild("../bindjs-android")
-              └── substitutes ai.metabind:bindjs-android → :bindjs
+samples/assistant-demo            (this build)
+  └── includeBuild("../..")       (the metabind-android monorepo root)
+        ├── substitutes ai.metabind:metabindai-android  → :metabindai
+        └── substitutes ai.metabind:mcpappshost-android → :mcpappshost
 ```
 
-So editing source in `../metabind-ai-android` or `../bindjs-android` flows into the next `:app:installDebug` build without publishing anything. Trust those sources over the resolved artifact when investigating runtime behavior.
+BindJS stays a **published** GitHub Packages artifact (`ai.metabind:bindjs-android`) — it is
+not folded into the monorepo and is not substituted here. So editing source in
+`../../metabindai` or `../../mcpappshost` flows into the next `:app:installDebug` build
+without publishing anything; BindJS changes still require a published `bindjs-android`.
+Trust the in-tree SDK sources over the resolved artifact when investigating runtime behavior.
 
-| Repo | Path | What lives there |
+| Module (monorepo root `../..`) | Path | What lives there |
 |---|---|---|
-| `bindjs-android` | `../bindjs-android` | The BindJS Kotlin runtime + Compose renderer (`JsRuntimeImpl`, `BindJSView`) and the JS isolate script (`bindjs/src/main/res/raw/script.js`). |
-| `metabind-ai-android` | `../metabind-ai-android` | Publishes `metabind-assistant-android` (the `MetabindAgentProvider` SSE client + `ToolUIContent`) and `mcpappshost-android` (the `MCPAppsClient` JSON-RPC client over MCP). |
-| `metabind-android` | `../metabind-android` | The lower-level Metabind SDK (not consumed directly by this demo; sibling to metabind-assistant-android). |
+| `:metabindai` | `../../metabindai` | `metabindai-android`: the `MetabindAgentProvider` SSE client + `ToolUIContent`. Package `ai.metabind.ai`. |
+| `:mcpappshost` | `../../mcpappshost` | `mcpappshost-android`: the `MCPAppsClient` JSON-RPC client over MCP. |
+| `:metabind-content` | `../../metabind-content` | `metabind-content-android`, the content SDK (not consumed by this demo). |
+| `bindjs-android` | published artifact | The BindJS Kotlin runtime + Compose renderer (`JsRuntimeImpl`, `BindJSView`) and the JS isolate script. Consumed from GitHub Packages, own repo. |
 
 ## Module / package layout
 
@@ -127,7 +134,7 @@ The OnAppear → `UiEvent.OnAppear(handlerId)` → `HomeScreen.handleBindJSEvent
 - Hilt 2.59.2 + KSP 2.3.6
 - `kotlinx.serialization` 1.8.1
 - `com.halilibo.compose-richtext:richtext-commonmark + richtext-ui-material3` 1.0.0-alpha01 (assistant markdown rendering)
-- `ai.metabind:metabind-assistant-android` 0.1.2 (substituted to local source when `../metabind-ai-android` is present — see chain above)
+- `ai.metabind:metabindai-android` (unified 0.2.0; substituted to the in-tree `:metabindai` module via `includeBuild("../..")` — see chain above)
 - BindJS uses `androidx.javascriptengine.JavaScriptSandbox` + `JavaScriptIsolate` for the JS runtime. Requires WebView JavaScript Sandbox to be available on the device.
 
 ## Build / run
@@ -146,7 +153,7 @@ Both GitHub Packages repos in `settings.gradle.kts` need `gpr.user` / `gpr.key` 
 | Tag | Source | What it tells you |
 |---|---|---|
 | `HomeViewModel` | this app | Send/receive turns, tool discovery, UI bundle load, MCP tool-call wrapping |
-| `MetabindAgentProvider` | `metabind-ai-android` | SSE frames (`message_start`, `tool_use`, `tool_use_input_partial`, `tool_result`, `message_stop`) |
+| `MetabindAgentProvider` | `:metabindai` (`metabindai-android`) | SSE frames (`message_start`, `tool_use`, `tool_use_input_partial`, `tool_result`, `message_stop`) |
 | `BindJSToolBubble` | this app | Render failures from `callComponent` |
 | `JsRuntimeImpl` | `bindjs-android` | `setEnvironment`/`willRender`/`callComponent` lifecycle, **component-tree dumps after each render**, `Unknown MCP method` warnings |
 | `JSConsole` | `bindjs-android` | Any JS `console.log` that does **not** start with `__MCP__::` |
@@ -160,4 +167,8 @@ adb logcat MetabindAgentProvider:V HomeViewModel:V JsRuntimeImpl:V BindJSHost:V 
 
 ## Releasing
 
-There's a `publish-metabind-binaries` skill that orchestrates the full three-repo release (`bindjs-android` → `metabind-ai-android` → `metabind-android` → re-pin this app). Use it when changes need to ship to consumers; don't do that for local verification — the composite-build chain already handles that.
+Shipping to consumers now means releasing from the `metabind-android` monorepo root:
+publish `bindjs-android` (separate repo) if it changed, then publish the three libraries
+(`metabind-content-android`, `mcpappshost-android`, `metabindai-android`) at the unified
+version from the monorepo root, then re-pin this sample if you build it standalone. Don't
+do that for local verification — the composite-build chain already handles that.
