@@ -1,0 +1,60 @@
+[
+  {
+    "sections":[
+      {
+        "canDelete":false,
+        "id":"3eba91f5-8cb4-40b2-946e-fa6651fe4ef4",
+        "props":{
+          "title":"College Message",
+          "coverImage":{
+            "dimensions":{
+              "height":2048,
+              "width":2048
+            },
+            "src":"https://firebasestorage.googleapis.com/v0/b/content-builder-aa1f5.appspot.com/o/assets%2Fapp-demo-1eca343d-838e-4bae-8298-f35dccca3ce6-cb-logo-header-187.jpeg?alt=media&token=12f86e3e-7c6f-4ad9-9976-9bf3b41fa02c",
+            "contentMode":"cover"
+          },
+          "titleStyle":"titleHeader",
+          "caption":"MON 13 JAN, 10:15 AM"
+        },
+        "type":"message-header",
+        "canMove":false
+      },
+      {
+        "canMove":false,
+        "props":{
+          "title":"Generic University",
+          "subtitle":"Someplace, Somewhere",
+          "iconURL":"https://firebasestorage.googleapis.com/v0/b/cb-prototype-4e3e7.appspot.com/o/gu-logo-square.png?alt=media&token=096c8f66-1420-4992-a326-33a3084ad591"
+        },
+        "id":"7c429213-0f1e-4941-b907-6880179d721e",
+        "type":"institution",
+        "canDelete":false
+      },
+      {
+        "type":"paragraph",
+        "canMove":true,
+        "canDelete":true,
+        "id":"22f85f6b-8815-4c25-9642-f129763ef8e1",
+        "props":{
+          "title":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniamm",
+          "align":"left",
+          "style":"body"
+        }
+      },
+      {
+        "canMove":false,
+        "canDelete":false,
+        "props":{
+          "title":"Action"
+        },
+        "type":"action",
+        "id":"3fbc26a2-600c-454d-a4ac-2bffc42fb56d"
+      }
+    ],
+    "title":"College Message",
+    "style":"light",
+    "addIndex":0,
+    "id":"page-1"
+  }
+]

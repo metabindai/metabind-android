@@ -1,0 +1,2246 @@
+FeatureCard ~~~BEGIN
+const metadata = () => ({
+    title: "Feature Card"
+});
+const body = (props, children) => {
+    const textBackgdropOpacity = {
+        'none': 0,
+        'light': 0.5,
+        'heavy': 1.0
+    };
+    const tbo = textBackgdropOpacity[props.textBackdrop] ?? 1;
+    const textBackdrop = (LinearGradient({
+        colors: [
+            Color('black').opacity(0.01),
+            Color('black').opacity(tbo * 0.6),
+            Color('black').opacity(tbo),
+        ]
+    })
+        .frame({ height: 200 }).frame({ maxHeight: Infinity, alignment: 'bottom' }));
+    const titleElement = (Text(props.title ?? "Feature Card")
+        .frame({ maxWidth: Infinity, alignment: 'leading' })
+        .font('title2')
+        .fontWeight('semibold')
+        .padding('trailing', 20));
+    const descriptionElement = Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam")
+        .frame({ maxWidth: Infinity, alignment: 'leading' })
+        .font('subheadline')
+        .lineSpacing(8)
+        .foregroundStyle(CardSecondaryTextColor())
+        .fontWeight('medium');
+    return (FeatureContainer([
+        VStack({ spacing: 4 }, [
+            Spacer(),
+            titleElement,
+            descriptionElement
+        ])
+            .padding(20)
+            .padding('bottom', 8)
+            .frame({ maxWidth: Infinity, maxHeight: Infinity })
+            .background(tbo > 0 ? textBackdrop : EmptyView())
+            .background(Asset({ image: {
+                                                url: 'https://cdn.metabind.ai/99f55fa7-ce68-4870-a983-08aa61d451a5/THnTPmCD4zBwZJsondQR/assets/y9hwSJjf1s84zTNz8Tv2/lawnmower-1.png'
+                                            }, contentMode: 'fill' }))
+            .background(CardBackgroundColor())
+            .foregroundStyle(CardTextColor())
+            .cornerRadius(40)
+            .frame({ height: 405 })
+    ]));
+};
+
+const properties = (props) => ({
+    title: PropertyString({
+        title: "Title"
+    }),
+    description: PropertyString({
+        title: "Description"
+    }),
+    background: PropertyAsset({
+        title: "Background"
+    }),
+    textBackdrop: PropertyEnum({
+        title: "Text Backdrop",
+        defaultValue: 'none',
+        options: [
+            { value: "none", label: "None" },
+            { value: "light", label: "Light" },
+            { value: "heavy", label: "Heavy" },
+        ]
+    })
+});
+~~~END
+
+TestFrames ~~~BEGIN
+const body = (props, children) => {
+    return ZStack({ alignment: 'center' }, [
+        LinearGradient({
+            colors: [
+                Color('black').opacity(1.0),
+                Color('black').opacity(0.8),
+                Color('#000000').opacity(0.0)
+            ]
+        })
+            .frame({ height: 150 })
+            .background(Color("red"))
+            .frame({ maxHeight: Infinity, alignment: 'center' })
+            .background(Color("blue"))
+    ])
+}
+~~~END
+
+ExploreCard ~~~BEGIN
+const metadata = () => ({
+    title: "Explore Card"
+});
+const defaultImage = {
+    url: "https://cdn.metabind.ai/99f55fa7-ce68-4870-a983-08aa61d451a5/THnTPmCD4zBwZJsondQR/assets/ykiQJk1wmjIBityfF0bC/lawnmower-addons.png",
+    dimensions: { width: 516, height: 509 }
+};
+const SheetContent = makeComponent((props, children) => {
+    return Text("hello").foregroundStyle(Color('white'));
+});
+const body = (props, children) => {
+    const colorIndex = useState(0);
+    const env = useEnvironment();
+    console.log('Env', JSON.stringify(env));
+    const scale = modulate(448, 402, 800, 1.0, 1.25, false);
+    // below is not working because env values are undefined
+    //const scale = modulate(env.containerWidth ?? env.screen?.width, 402, 800, 1.0, 1.25, false);
+    console.log('scale', scale);
+    console.log('env.containerWidth', env.containerWidth);
+    console.log('env.screen?.width', env.screen?.width);
+    const features = [
+        { x: -100, y: -32, title: "MulchMaster" },
+        { x: -12, y: 62, title: "TrimEdge Blade" },
+        { x: 90, y: 100, title: "EdgeGuide Laser" },
+    ];
+    const showFeature = (feature, idx) => {
+        env.setSheetContent(props.featureCards[idx] ?? Text("No Card"));
+        setTimeout(() => {
+            withAnimation(Spring(), () => {
+                env.setShowSheet(true);
+            });
+        }, 200);
+    };
+    const gradientOverlay = (LinearGradient({
+        colors: [
+            Color('black').opacity(0.01),
+            Color('black').opacity(1.0),
+            Color('black').opacity(1.0),
+        ]
+    })
+        .frame({ height: 200 }).frame({ maxHeight: Infinity, alignment: 'bottom' }));
+    const featurePositions = features.map((feature, index) => {
+        return (FeaturePosition({ title: feature.title })
+            .onTapGesture(() => {
+            showFeature(feature, index);
+        })
+            .frame({ width: 44, height: 44 })
+            .offset({ x: feature.x * scale, y: feature.y * scale }));
+    });
+    return (FeatureContainer([
+        Card({ padding: 0 }, [
+            ZStack({ alignment: 'center' }, [
+                Image({ ...defaultImage, contentMode: 'fit' }).resizable(),
+                LinearGradient({
+                    colors: [
+                        Color('black').opacity(1.0),
+                        Color('black').opacity(0.8),
+                        Color('#000000').opacity(0.0)
+                    ]
+                })
+                    .frame({ height: 150 })
+                    .frame({ maxHeight: Infinity, alignment: 'top' }),
+                VStack([
+                    Text(props.title ?? "Title")
+                        .font('title2')
+                        .fontWeight('semibold')
+                        .frame({ width: 200, alignment: 'leading' })
+                        .frame({ maxWidth: Infinity, alignment: 'leading' })
+                        .padding('top', 10),
+                    Spacer(),
+                ])
+                    .padding('vertical', 20)
+                    .padding('horizontal', 30)
+                    .background(gradientOverlay),
+                ...featurePositions,
+            ])
+        ])
+            .frame({ height: 500 })
+    ]));
+};
+const FeaturePosition = makeComponent((props, children) => {
+    return ZStack([
+        Circle().frame({ width: 16, height: 16 }),
+        Circle().frame({ width: 34, height: 34 }).opacity(0.25),
+        Text(props.title ?? "Title")
+            .multilineTextAlignment('center')
+            .fixedSize({ horizontal: true })
+            .offset({ y: 32 }).font('footnote').fontWeight('semibold').foregroundStyle(CardSecondaryTextColor())
+    ]);
+});
+const properties = (props) => ({
+    title: PropertyString({
+        title: "Title"
+    }),
+    featureCards: PropertyArray({
+        title: "Cards",
+        valueType: PropertyComponent({
+            allowedComponents: ['ExploreCardItem']
+        })
+    })
+});
+function modulate(value, inMin, inMax, outMin, outMax, clamp = false) {
+    let t = (value - inMin) / (inMax - inMin);
+    if (clamp) {
+        t = Math.min(1, Math.max(0, t));
+    }
+    return outMin + t * (outMax - outMin);
+}
+~~~END
+
+Asset ~~~BEGIN
+const metadata = () => ({
+    title: "Asset"
+});
+const body = (props, children) => {
+    if (props.image) {
+        return Image({ ...props.image, contentMode: props.contentMode ?? 'fill' }).resizable();
+    }
+    else if (props.video) {
+        return Video({ ...props.video, muted: true, controls: false, autoplay: true, loop: true, contentMode: props.contentMode ?? 'fill' });
+    }
+    else {
+        return Rectangle();
+    }
+};
+const properties = (props) => ({});
+~~~END
+
+CardBackgroundColor ~~~BEGIN
+const metadata = () => ({
+    title: "CardBackgroundColor",
+    public: false
+});
+const body = (props, children) => {
+    return Color('black');
+};
+const properties = (props) => ({});
+~~~END
+
+CardSecondaryTextColor ~~~BEGIN
+const metadata = () => ({
+    title: "CardSecondaryTextColor",
+    public: false
+});
+const body = (props, children) => {
+    return Color('#A7A7A7');
+};
+const properties = (props) => ({});
+~~~END
+
+CardTextColor ~~~BEGIN
+const metadata = () => ({
+    title: "CardTextColor",
+    public: false
+});
+const body = (props, children) => {
+    return Color('white');
+};
+const properties = (props) => ({});
+~~~END
+
+Card ~~~BEGIN
+const metadata = () => ({
+    title: "Card",
+    public: false
+});
+const body = (props, children) => {
+    return (Group(children?.length > 0 ? children : [Empty()])
+        .padding(props.padding != null ? props.padding : 20)
+        .frame({ maxWidth: Infinity })
+        .frame({ minHeight: 200 })
+        .background(CardBackgroundColor())
+        .foregroundStyle(CardTextColor())
+        .cornerRadius(40));
+};
+const properties = (props) => ({});
+~~~END
+
+FeatureContainer ~~~BEGIN
+const metadata = () => ({
+    title: "FeatureContainer",
+    public: false
+});
+const body = (props, children) => {
+    const env = useEnvironment();
+    return (VStack(children)
+        .padding('horizontal', env.horizontalSpacing ?? 30)
+        .environment('containerWidth', Math.min(env.screen?.width - 60, 750))
+        .frame({ maxWidth: 750 }));
+};
+const properties = (props) => ({});
+~~~END
+
+TestBackground ~~~BEGIN
+const testImageURL = "https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/0205c6f5-2d89-4ccf-963a-01c8ee7215b6/assets/8a8ba7ac-2570-4b97-a5be-000455bc8399/Research.jpg";
+const testImage = {
+    url: testImageURL, dimensions: { width: 613, height: 287 }
+};
+
+const body = (props, children) => {
+    const content = (
+        VStack([
+            RoundedRectangle()
+                .fill(Color('blue').opacity(0.5))
+                .background(Text('Background Text').bold())
+                .foregroundStyle(Color('black'))
+                .frame({ width: 200, height: 200 }),
+
+            RoundedRectangle()
+                .fill(Color('blue').opacity(0.5))
+                .background(Color('green').opacity(0.2))
+                .foregroundStyle(Color('black'))
+                .frame({ width: 200, height: 50 }),
+
+            RoundedRectangle()
+                .fill(Color('blue').opacity(0.25))
+                .background(Circle().fill(Color('black')))
+                .foregroundStyle(Color('black'))
+                .frame({ width: 200, height: 50 }),
+
+            Text("Background Color")
+                .padding(10)
+                .background(Color('red')),
+
+            Text("Background Element")
+                .padding(8)
+                .background(RoundedRectangle().fill(Color('green'))),
+
+            Circle()
+                .fill(Color('black'))
+                .frame({ width: 50, height: 50 })
+                .padding(8)
+                .background(RoundedRectangle().fill(Color('green')).frame({ width: 20, height: 80 })
+                    .rotationEffect(40)),
+
+            Rectangle()
+                .fill(Color('blue').opacity(0.4))
+                .frame({ width: 150, height: 150 })
+                .background(Image(testImage).resizable()),
+
+            Rectangle()
+                .fill(Color('blue').opacity(0.4))
+                .blendMode('overlay')
+                .frame({ width: 150, height: 150 })
+                .background(
+                    LinearGradient()
+                )
+        ])
+    );
+
+    return (
+        ScrollView([
+            content
+        ])
+    )
+}
+~~~END
+
+TestHStack ~~~BEGIN
+const testCircle = Ellipse().fill(Color('blue')).frame({ width: 20, height: 20 });
+const testRect = RoundedRectangle({ cornerRadius: 5 }).fill(Color('blue'));
+
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack([
+            HStack([
+                testCircle,
+                testCircle
+            ]),
+
+            HStack([
+                testCircle,
+                Spacer(),
+                testCircle
+            ]),
+
+            HStack([
+                testCircle,
+                Spacer(),
+                testCircle,
+                Spacer(),
+                testCircle
+            ]),
+
+            HStack([
+                Spacer(),
+                testCircle,
+                Spacer(),
+                testCircle,
+                Spacer(),
+                testCircle,
+                Spacer()
+            ]),
+
+            HStack([
+                Spacer(),
+                testCircle,
+            ]),
+
+            HStack([
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 20 }),
+            ]),
+
+            HStack([
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 20 }),
+            ]),
+
+
+            HStack({ spacing: 100 }, [
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 20 })
+            ]),
+
+            HStack({ spacing: 100, alignment: 'bottom' }, [
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 100 })
+            ])
+            .background(Color('black').opacity(0.1)),
+
+            HStack({ spacing: 100, alignment: 'top' }, [
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 100 })
+            ])
+                .background(Color('black').opacity(0.1)),
+
+            HStack({ spacing: 100, alignment: 'center' }, [
+                testRect.frame({ height: 20 }),
+                testRect.frame({ height: 100})
+            ])
+                .background(Color('black').opacity(0.1)),
+
+        ])
+    )
+}
+~~~END
+
+TestCapsule ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    const linearGradient = (
+        LinearGradient({
+            colors: [
+                Color('blue'),
+                Color('black')
+            ]
+        })
+    );
+
+    return (
+        VStack([
+            Capsule()
+                .frame({ width: 200, height: 100 }),
+
+            Capsule()
+                .fill(Color('blue'))
+                .frame({ width: 200, height: 100 }),
+            Capsule()
+                .fill(linearGradient)
+                .frame({ width: 200, height: 100 }),
+            ZStack([
+                Capsule()
+                    .fill(Color('blue')),
+                Text("Size to parent")
+            ])
+            .frame({ width: 200, height: 100 })
+            .border({ style: Color('black'), width: 1 })
+            .foregroundStyle(Color('white')),
+
+            ZStack([
+                Capsule()
+                    .fill(Color('blue')),
+                Text("Size to parent")
+                    .multilineTextAlignment('center')
+            ])
+            .frame({ width: 100, height: 200 })
+            .border({ style: Color('black'), width: 1 })
+            .foregroundStyle(Color('white'))
+        ])
+
+    )
+}
+~~~END
+
+TestForegroundStyle ~~~BEGIN
+const body = (props, children) => {
+    return (
+        VStack({ spacing: 20 }, [
+            TestTextForeground(),
+            TestShapeForeground(),
+            TestMaterialForeground()
+        ])
+            .font(28)
+            .padding(20)
+    )
+};
+
+const thumbnail = () => TestTextForeground();
+
+const TestShapeForeground = () => {
+    return (
+        VStack([
+            Capsule().frame({ height: 20 })
+                .foregroundStyle(Color('red')),
+
+            Capsule().frame({ height: 20 })
+                .foregroundStyle(Color('secondary')),
+
+            Capsule().frame({ height: 20 })
+                .foregroundStyle(LinearGradient({
+                    colors: [Color('purple'), Color('red')]
+                }))
+
+        ])
+    )
+};
+
+const TestMaterialForeground = () => {
+    const image =
+        Image({ url: 'https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/9279cab9-3f77-4b85-9cac-e7225f6ef208/assets/b54f4fec-f4fc-4626-ade4-6fba67a2a38b/iClarified-iOS26-LockScreen-Dark.jpg' })
+            .resizable()
+            .aspectRatio({ contentMode: 'fill' });
+
+    return (
+        VStack([
+            Capsule().frame({ height: 20 })
+                .foregroundStyle(Material('regular')),
+            Circle().frame({ height: 20, width: 20 })
+                .foregroundStyle(Color('green')),
+            Text("TestForegroundStyle")
+                .foregroundStyle(Color('gray'))
+
+        ])
+            .padding(20)
+            .background(image)
+            .frame({ height: 200 })
+            .clipped()
+    )
+};
+
+
+const TestTextForeground = () => {
+    return (
+        VStack([
+            Text("TestForegroundStyle")
+                .foregroundStyle(Color('red')),
+
+            Text("TestForegroundStyle")
+                .foregroundStyle(Color('secondary')).colorScheme('dark'),
+
+            Text("TestForegroundStyle")
+                .foregroundStyle(LinearGradient({
+                    colors: [Color('purple'), Color('red')]
+                })),
+
+        ])
+    )
+};
+~~~END
+
+TestGrayscale ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack({ spacing: 10 }, [
+            LabeledRectangle({ text: "Full" })
+                .grayscale(),
+
+            LabeledRectangle({ text: "Partial" })
+                .grayscale(0.5),
+
+            LabeledRectangle({ text: "None" })
+                .grayscale(0.0)
+        ])
+    )
+}
+~~~END
+
+TestImage ~~~BEGIN
+let s = 80;
+
+const testImageURL = "https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/0205c6f5-2d89-4ccf-963a-01c8ee7215b6/assets/8a8ba7ac-2570-4b97-a5be-000455bc8399/Research.jpg";
+const testImage = {
+    url: testImageURL, dimensions: { width: 613, height: 287 }
+};
+
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack([
+            DefaultImage(),
+            ResizeableImage(),
+            ScaleToFillImage(),
+            ScaleToFitImage(),
+
+            ScaleToFillImage().clipped(),
+            ScaleToFitImage().clipped(),
+
+            VStack([
+                //ScaleToFillImage(),
+                ScaleToFillImage(),
+                Text("Hello")
+            ])
+                .frame({ height: 100, width: 100 })
+                .border({ style: Color('black') })
+        ]).frame({ height: 600 })
+    )
+};
+
+const DefaultImage = () => (
+    ZStack([
+        Image({ url: testImageURL })
+    ]).frame({ width: s, height: s })
+);
+
+const ResizeableImage = () => (
+    ZStack([
+        Image({ url: testImageURL })
+            .resizable()
+    ]).frame({ width: s, height: s })
+);
+
+const ScaleToFillImage = () => (
+    ZStack([
+        Image({ url: testImageURL , contentMode: 'fill'})
+            .resizable()
+        //.frame({ width: s, height: s })
+    ]).frame({ width: s, height: s })
+);
+
+const ScaleToFitImage = () => (
+    ZStack([
+        Image({ url: testImageURL, contentMode: 'fit' })
+            .resizable()
+            //.frame({ width: s, height: s })
+    ]).frame({ width: s, height: s })
+);
+~~~END
+
+TestHidden ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack([
+            Text("Above Hidden"),
+            Text("Hidden")
+                .hidden(),
+            Text("Below Hidden")
+        ])
+    )
+}
+~~~END
+
+TestItalic ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        HStack([
+            Text("Italic, ").italic().font(44),
+            Text("Not Italic").italic(false).font(44).fixedSize({ horizontal: true }),
+        ])
+    )
+}
+~~~END
+
+TestLayoutFrame ~~~BEGIN
+const FrameTests = () => [
+    FrameTestBaseline(),
+    FrameMinMaxTest(),
+    FrameUnboundedExpansionTest(),
+    FrameBeforeAfterBackgroundTest(),
+    FrameAspectRatioTest(),
+    FrameNestedCenteringTest(),
+    FramePaddingInteractionTest(),
+];
+
+const body = () => {
+
+    let tests = FrameTests();
+    let index = 5;
+    let test = tests[index < tests.length ? index : 0];
+    return Group(test)
+};
+
+const previews = () => ([
+    Self(),
+    ...FrameTests()
+]);
+
+/**
+ * Frame Sizing Test
+ *
+ * Goal:
+ * Verify that `.frame({ width, height })` and `.background()` modifiers
+ * interact correctly — ensuring each background paints behind the view’s
+ * current layout bounds at the moment it’s applied.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Circle()
+ *     - Draws a basic shape with intrinsic (content-based) size.
+ *
+ * 2️⃣ .frame({ width: 200, height: 150 })
+ *     - Constrains the rectangle to exactly 200×150.
+ *     - The rectangle’s layout bounds are now fixed at 200×150.
+ *
+ * 3️⃣ .background(Color('red').opacity(0.5))
+ *     - Applies **after** the inner frame.
+ *     - The red background matches the rectangle’s *current* bounds (200×150).
+ *     - Red fills the 200×150 area — not any later frame you add.
+ *
+ * 4️⃣ .frame({ width: 400, height: 800 })
+ *     - Expands the layout space to 400×800.
+ *     - The red background remains 200×150 because it was applied earlier.
+ *     - The 200×150 red area is now centered within the 400×800 frame.
+ *
+ * 5️⃣ .background(Color('blue').opacity(0.1))
+ *     - Applies **after** the outer frame.
+ *     - The blue background fills the *entire* 400×800 frame.
+ *     - Final visual result:
+ *         🔵 Blue background (400×800)
+ *           🟥 Red rectangle (200×150) centered inside
+ *             🟩 Green shape (200×150 content area)
+ */
+const FrameTestBaseline = () => {
+    return (
+        VStack([
+            // --- Inner child ---
+            Circle()
+                .fill(Color('green').opacity(0.5))
+                // Child fixed at 200×150
+                .frame({ width: 200, height: 150 })
+        ])
+            // --- Middle frame (acts as parent) ---
+            // Red background matches the 200×150 frame above
+            .background(Color('red').opacity(0.5))
+
+            // --- Outer frame ---
+            // Expands total layout to 400×800,
+            // leaving the red background centered at 200×150
+            .frame({ width: 400, height: 800 })
+
+            // --- Outer background ---
+            // Blue background matches the outer frame’s full 400×800 bounds
+            .background(Color('blue').opacity(0.1))
+    )
+};
+
+/**
+ * FrameMinMaxTest
+ *
+ * Goal:
+ * Verify that `.frame({ minWidth, maxWidth, minHeight, maxHeight })`
+ * correctly clamps its child’s size between the given limits.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()
+ *     - Intrinsic content size: e.g., 50×50.
+ *
+ * 2️⃣ .frame({ minWidth: 100, maxWidth: 200, minHeight: 80, maxHeight: 120 })
+ *     - Expands the child to meet minimum constraints (100×80),
+ *       but never exceeds maximums.
+ *
+ * 3️⃣ .background(Color('red'))
+ *     - Red fills the final clamped size.
+ *
+ * 4️⃣ .frame({ width: 300, height: 200 })
+ *     - Expands total layout space to 300×200, keeping red centered.
+ *
+ * 5️⃣ .background(Color('blue'))
+ *     - Blue fills the full 300×200 outer frame.
+ *
+ * Expected visual result:
+ * 🔵 Blue = 300×200 parent frame
+ * 🟥 Red = 100×80 clamped inner frame
+ * 🟩 Green = rectangle content (intrinsic)
+ */
+const FrameMinMaxTest = () => {
+    return (
+        Rectangle()
+            .fill(Color("green").opacity(0.45))
+            .padding(10)
+            .frame({ minWidth: 100, maxWidth: 200, minHeight: 80, maxHeight: 120 })
+            .background(Color("red").opacity(0.5))
+            .frame({ width: 300, height: 200 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+
+/**
+ * FrameUnboundedExpansionTest
+ *
+ * Goal:
+ * Test how `.frame({ width: Infinity, height: Infinity })`
+ * behaves when placed inside a constrained parent.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()
+ *     - Draws intrinsic shape (50×50).
+ *
+ * 2️⃣ .frame({ width: Infinity, height: Infinity })
+ *     - Requests as much space as possible.
+ *     - The parent (VStack) decides how much to give.
+ *
+ * 3️⃣ VStack()
+ *     - Proposes finite width/height via its own `.frame({ width: 300, height: 200 })`.
+ *     - The child expands to fill those bounds.
+ *
+ * 4️⃣ .background(Color('blue'))
+ *     - Blue shows total parent area (300×200).
+ *
+ * Expected:
+ * Green fills the entire blue region (because it expanded fully).
+ */
+const FrameUnboundedExpansionTest = () => {
+    return (
+        VStack([
+            Rectangle()
+                .fill(Color("green").opacity(0.5))
+                .frame({ width: Infinity, height: Infinity })
+        ])
+            .frame({ width: 300, height: 200 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+
+/**
+ * FrameBeforeAfterBackgroundTest
+ *
+ * Goal:
+ * Demonstrate how `.background()` applied before or after `.frame()`
+ * produces different visual results.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()
+ *     - Intrinsic 50×50.
+ *
+ * 2️⃣ .background(Color('red'))
+ *     - Red matches the rectangle’s original 50×50 bounds.
+ *
+ * 3️⃣ .frame({ width: 200, height: 100 })
+ *     - Expands layout region, leaving red centered within the new frame.
+ *
+ * 4️⃣ .background(Color('blue'))
+ *     - Blue fills the full 200×100 frame.
+ *
+ * Expected:
+ * - Red = inner background (50×50)
+ * - Blue = outer frame background (200×100)
+ */
+const FrameBeforeAfterBackgroundTest = () => {
+    return (
+        Rectangle()
+            .fill(Color("green"))
+            .background(Color("red").opacity(0.5))
+            .frame({ width: 200, height: 100 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+
+/**
+ * FrameAspectRatioTest
+ *
+ * Goal:
+ * Ensure `.aspectRatio()` combined with `.frame()` calculates correct
+ * proportional width/height while respecting parent constraints.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()
+ *     - Intrinsic 1:1 aspect.
+ *
+ * 2️⃣ .aspectRatio(16/9)
+ *     - Width = 16, Height = 9 (relative proportions).
+ *
+ * 3️⃣ .frame({ width: 320 })
+ *     - Fixes width to 320 → height auto = 320 / (16/9) ≈ 180.
+ *
+ * 4️⃣ .background(Color('red'))
+ *     - Red = 320×180 aspect-fit area.
+ *
+ * 5️⃣ .frame({ width: 400, height: 300 })
+ *     - Expands parent area.
+ *
+ * 6️⃣ .background(Color('blue'))
+ *     - Blue = 400×300 outer bounds.
+ *
+ * Expected:
+ * 🔵 Blue = outer 400×300 frame
+ * 🟥 Red = 320×180 aspect region centered inside
+ */
+const FrameAspectRatioTest = () => {
+    return (
+        Rectangle()
+            .fill(Color("green"))
+            .aspectRatio(16 / 9)
+            .frame({ width: 320 })
+            .background(Color("red").opacity(0.5))
+            .frame({ width: 400, height: 300 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+
+/**
+ * FrameNestedCenteringTest
+ *
+ * Goal:
+ * Verify nested frames center correctly when their sizes differ.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()
+ *     - Intrinsic shape (50×50).
+ *
+ * 2️⃣ .frame({ width: 100, height: 100 })
+ *     - Expands to 100×100.
+ *
+ * 3️⃣ .background(Color('red'))
+ *     - Red fills 100×100 bounds.
+ *
+ * 4️⃣ .frame({ width: 300, height: 200 })
+ *     - Expands to 300×200, centering inner red frame.
+ *
+ * 5️⃣ .background(Color('blue'))
+ *     - Blue fills 300×200 outer bounds.
+ *
+ * Expected:
+ * Red 100×100 box centered within Blue 300×200.
+ */
+const FrameNestedCenteringTest = () => {
+    return (
+        Rectangle()
+            .fill(Color("green"))
+            .frame({ width: 100, height: 100 })
+            .background(Color("red").opacity(0.5))
+            .frame({ width: 300, height: 200 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+
+/**
+ * FramePaddingInteractionTest
+ *
+ * Goal:
+ * Ensure `.padding()` and `.frame()` interact correctly — padding modifies
+ * the view’s proposed size *before* frame clamps it.
+ *
+ * Layout order explanation:
+ *
+ * 1️⃣ Rectangle()  → 50×50.
+ *
+ * 2️⃣ .padding(20)
+ *     - Adds 20px around content → effective size 90×90.
+ *
+ * 3️⃣ .background(Color('red'))
+ *     - Red = 90×90 padded region.
+ *
+ * 4️⃣ .frame({ width: 200, height: 200 })
+ *     - Expands to 200×200 total area.
+ *
+ * 5️⃣ .background(Color('blue'))
+ *     - Blue = outermost 200×200.
+ *
+ * Expected:
+ * Green = 50×50 content
+ * Red = 90×90 padded region
+ * Blue = 200×200 outer frame
+ */
+const FramePaddingInteractionTest = () => {
+    return (
+        Rectangle()
+            .fill(Color("green"))
+            .padding(20)
+            .background(Color("red").opacity(0.5))
+            .frame({ width: 200, height: 200 })
+            .background(Color("blue").opacity(0.1))
+    );
+};
+~~~END
+
+TestLayoutHStack ~~~BEGIN
+/**
+ * HStack Layout Test
+ *
+ * Goal:
+ * Ensure HStack correctly sums child widths and adopts the max child height,
+ * while respecting parent frame constraints.
+ *
+ * Layout sequence:
+ * 1️⃣ Each child receives unconstrained width, proposed height.
+ * 2️⃣ HStack sums widths + spacing.
+ * 3️⃣ Parent frame clamps if finite.
+ *
+ * Expected visual result:
+ * 🔵 Blue = outer 400×200 frame
+ * 🟥 Red = HStack bounds (total width of children)
+ * 🟩 Green = child rectangles side-by-side
+ */
+const body = () => {
+    const HStackTests = [
+        HStackTest(),       // 0
+        HStackSpace()
+    ];
+    let index = 1;
+    let test = HStackTests[index < HStackTests.length ? index : 0];
+    return Group(test)
+};
+
+const HStackTest = () => (
+    HStack({ spacing: 20 } , [
+        Rectangle().fill(Color('green')).frame({ width: 80, height: 100 }),
+        Rectangle().fill(Color('green')).frame({ width: 120, height: 50 }),
+        Rectangle().fill(Color('green')).frame({ width: 60, height: 75 }),
+    ])
+        .background(Color('red').opacity(0.5))
+        .frame({ width: 400, height: 200 })
+        .background(Color('blue').opacity(0.1))
+);
+
+const HStackSpace = () => (
+    HStack({ spacing: 10 }, [
+        Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam"),
+        Rectangle().fill(Color('green')),
+        Rectangle().fill(Color('red'))
+    ]).frame({ width: 400, height: 200 })
+);
+~~~END
+
+TestLayoutStacks ~~~BEGIN
+const wideImage = {
+    url: "https://cdn-dev.metabind.ai/213236ac-f3a9-416a-b371-d13bee51593e/bSxSS25yiIRLSytQin9f/assets/1BezENMN2fsnU5rCiDZY/wide.png"
+};
+
+const tallImage = {
+    url: "https://cdn-dev.metabind.ai/213236ac-f3a9-416a-b371-d13bee51593e/bSxSS25yiIRLSytQin9f/assets/5OVFIGwBvLx5J9xI1UnT/tall.png"
+};
+
+const engineImage = {
+    url: "https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/0205c6f5-2d89-4ccf-963a-01c8ee7215b6/assets/3520NpDVpU0AsIJ9Rj1T/ExploreEngine%20(1).jpg"
+};
+
+const body = (props: ComponentProps, children: Component[]) => {
+    return VStack({ spacing: 10 }, [
+
+        Rectangle().fill(Color("#007AFF")),
+
+        Rectangle().fill(Color("#FF3B30")),
+
+        Rectangle()
+            .fill(Color("#FFCC00"))
+            .frame({ width: 400, height: 25, alignment: "leading" }),
+
+        Rectangle()
+            .fill(Color("#FFCC44"))
+            .frame({ width: 420, height: 25 }),
+
+        Rectangle()
+            .fill(Color("#FFCC88"))
+            .frame({ width: 460, height: 25, alignment: "trailing" }),
+
+        HStack({ spacing: 10 }, [
+            Rectangle().fill(Color("#34C759")),
+
+            Rectangle().fill(Color("#34C759")),
+
+            //Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"),
+
+            Rectangle().fill(Color("#34C759")),
+            // Image(wideImage)
+            //     .resizable()
+            //     .scaledToFit(),
+            Image({ ...engineImage, contentMode: 'fit' }).resizable(),
+            Image({ ...engineImage, contentMode: 'fill' }).resizable(),
+            Rectangle().fill(Color("#34C759")),
+            // Image(tallImage)
+            //     .resizable()
+            //     .scaledToFill()
+            //     .padding(20)
+            //     .background(Color("red")),
+
+            Rectangle().fill(Color("#1B8A34")),
+
+            VStack({ spacing: 10 }, [
+                // Image(tallImage)
+                //     .resizable(),
+                //     //.scaledToFit(),
+
+                Rectangle().fill(Color("#34C759")),
+                // Image(wideImage)
+                //     .resizable(),
+                    //.scaledToFit(),
+
+                Rectangle().fill(Color("#1B8A34")),
+            ]),
+        ]),
+
+        HStack({ spacing: 10 }, [
+            Rectangle().fill(Color("#34C759")),
+            Rectangle().fill(Color("#28B746")),
+            Rectangle().fill(Color("#1B8A34")),
+
+            VStack({ spacing: 10 }, [
+                Rectangle().fill(Color("#34C759")),
+                Rectangle().fill(Color("#28B746")),
+                Rectangle().fill(Color("#1B8A34")),
+            ]),
+        ]),
+
+    ])
+};
+~~~END
+
+TestLinearGradient ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    const otherLinearGradient = (
+        LinearGradient({
+            colors: [
+                Color('green'),
+                Color('red'),
+                Color('green'),
+                Color('yellow'),
+                Color('purple'),
+            ]
+        })
+    );
+
+    const linearGradient = (
+        LinearGradient({
+            colors: [
+                Color('purple'),
+                Color('red')
+            ]
+        })
+    );
+
+    return (
+        VStack([
+            otherLinearGradient,
+            linearGradient
+        ])
+    )
+}
+~~~END
+
+TestLayoutZStack ~~~BEGIN
+const body = () => ZStackTest;
+const ZStackTest = () => (
+    ZStack([
+        Rectangle().fill(Color('green')).frame({ width: 100, height: 100 }),
+        Rectangle().fill(Color('green')).frame({ width: 150, height: 75 }),
+        Rectangle().fill(Color('green')).frame({ width: 80, height: 200 }),
+    ])
+        .background(Color('red').opacity(0.5))
+        .frame({ width: 400, height: 400 })
+        .background(Color('blue').opacity(0.1))
+);
+~~~END
+
+TestLineLimit ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack([
+            Text("This is a longer text that can span up to three lines before being truncated. This should be truncated from here possibly.")
+                .frame({ width: 200})
+                .lineLimit(3)
+        ])
+    )
+}
+~~~END
+
+TestLineSpacing ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack({ spacing: 10}, [
+            Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ")
+                .frame({ width: 200 })
+                .lineSpacing(-4),
+
+            Divider(),
+
+            Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ")
+                .frame({ width: 200 })
+                .lineSpacing(0),
+
+            Divider(),
+
+            Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ")
+                .frame({ width: 200 })
+                .lineSpacing(12)
+        ])
+    )
+}
+~~~END
+
+TestOffset ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    const o = 30;
+    return (
+        ZStack([
+            Circle()
+                .fill(Color("red"))
+                .frame({ width: 50, height: 50 })
+                .offset({ y: -o }),
+
+            Circle()
+                .fill(Color("green"))
+                .frame({ width: 50, height: 50})
+                .offset({ y: o, x: o }),
+
+            Circle()
+                .fill(Color("blue"))
+                .frame({ width: 50, height: 50 })
+                .offset({ y: o, x: -o })
+
+        ])
+    )
+}
+~~~END
+
+TestZIndex ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        ZStack([
+            Text("Front").foregroundStyle(Color('black')).zIndex(3),
+            Rectangle().fill(Color("blue")).zIndex(1),
+            Circle().fill(Color("white")).frame({ width: 300, height: 300 }).zIndex(2),
+        ])
+    )
+}
+~~~END
+
+TestVStack ~~~BEGIN
+const contentWidth = 404;
+const contentHeight = 800;
+
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack([
+            Text("TestVStack")
+                .background(Color('red').opacity(0.5))
+        ])
+        .frame({ width: contentWidth, height: contentHeight })
+        .background(Color('green').opacity(0.5))
+        .cornerRadius(48)
+    )
+}
+~~~END
+
+TestButton ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    const [pressed, setPressed] = useState(false);
+    return (
+        VStack([
+            Button({
+                action: () => {
+                    setPressed(!pressed)
+                },
+                label: Text(pressed ? "Pressed!" : "Press Me")
+            })
+            .foregroundStyle(Color('white'))
+            .padding(10)
+            .background(Color('blue'))
+            .cornerRadius(12)
+            .shadow()
+        ])
+    )
+}
+~~~END
+
+LabeledRectangle ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        ZStack([
+            RoundedRectangle().fill(props.fill ?? Color('blue')),
+            Text(props.text ?? "Rectangle")
+                .foregroundStyle(Color('white'))
+        ])
+        .frame({ width: 125, height: 50 })
+    )
+}
+~~~END
+
+TestBorder ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        VStack({ spacing: 10 }, [
+            LabeledRectangle({ text: "Border 2" })
+                .border(),
+
+            LabeledRectangle({ text: "Border 2"})
+                .border(4),
+
+            LabeledRectangle({ text: "Red Border 4"})
+                .border({ style: Color('red'), width: 4 }),
+        ])
+    )
+}
+~~~END
+
+TestBlur ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        RoundedRectangle()
+            .fill(Color('blue'))
+            .frame({ width: 100, height: 100 })
+            .blur(20)
+    )
+}
+~~~END
+
+TestBlendMode ~~~BEGIN
+const body = (props: ComponentProps, children: Component[]) => {
+    return (
+        ZStack([
+            RoundedRectangle()
+                .fill(Color('blue'))
+                .offset({ x: -20, y: 20 })
+                .frame({ width: 100, height: 100 }),
+
+            RoundedRectangle()
+                .fill(Color("red"))
+                .blendMode("difference")
+                .frame({ width: 100, height: 100 })
+        ])
+    )
+}
+~~~END
+
+TestFontDesign ~~~BEGIN
+const body = (props, children) => {
+    return (
+        VStack([
+            Text("Monospaced")
+                .fontDesign('monospaced'),
+            Text("Rounded")
+                .fontDesign('rounded'),
+            Text("Serif")
+                .fontDesign('serif')
+        ]).font(24)
+    )
+}
+~~~END
+
+TestMultilineTextAlignment ~~~BEGIN
+const body = (props, children) => {
+    return (
+        VStack({ spacing: 20}, [
+            Text("Left aligned multiline text")
+                .multilineTextAlignment("leading"),
+
+            Text("Center aligned multiline text")
+                .multilineTextAlignment("center"),
+
+            Text("Right aligned multiline text")
+                .multilineTextAlignment("trailing")
+        ]).frame({ width: 60})
+    )
+}
+~~~END
+
+ClipShapeTest ~~~BEGIN
+const angular = (
+    AngularGradient({
+        colors: [
+            Color('red'),
+            Color('orange'),
+            Color('yellow'),
+            Color('green'),
+            Color('blue'),
+            Color('indigo'),
+            Color('red')
+        ]
+    })
+);
+
+const body = (props, children) => {
+    return (
+        VStack([
+            CircleTest(),
+            CircleInsetTest(),
+            EllipseTest(),
+            CapsuleTest(),
+            RoundedRectangleTest()
+        ])
+    );
+};
+
+const thumbnail = () => CircleTest();
+
+const previews = () => ([
+    Self(),
+    CircleTest(),
+    CircleInsetTest(),
+    EllipseTest(),
+    CapsuleTest(),
+    RoundedRectangleTest()
+]);
+
+const CircleTest = () => (
+    angular
+        .frame({ width: 250, height: 250 })
+        .clipShape(Circle())
+);
+
+const CircleInsetTest = () => (
+    angular
+        .frame({ width: 250, height: 100 })
+        .clipShape(Circle())
+);
+
+const EllipseTest = () => (
+    angular
+        .frame({ width: 250, height: 125 })
+        .clipShape(Ellipse())
+);
+
+const CapsuleTest = () => (
+    angular
+        .frame({ width: 250, height: 50 })
+        .clipShape(Capsule())
+);
+
+const RoundedRectangleTest = () => (
+    angular
+        .frame({ width: 250, height: 50 })
+        .clipShape(RoundedRectangle({ cornerRadius: 20 }))
+);
+~~~END
+
+VideoTest ~~~BEGIN
+const body = (props, children) => {
+  const binding = useState("a");
+
+  return Video({
+    url: "https://www3.cde.ca.gov/download/rod/big_buck_bunny.mp4",
+    autoplay: true,
+    muted: true,
+    controls: true,
+    loop: false
+  })
+    .frame({ height: 300 })
+};
+~~~END
+
+MaterialTest ~~~BEGIN
+const body = (props, children) => {
+    return (
+        ZStack([
+            RoundedRectangle()
+                .foregroundStyle(Color('red'))
+                .frame({ width: 200, height: 200})
+                .offset({ x: -50, y: -50 }),
+
+            RoundedRectangle()
+                .foregroundStyle(Color('blue'))
+                .frame({ width: 200, height: 200})
+                .offset({ x: 50, y: 50 }),
+
+            RoundedRectangle()
+                .foregroundStyle(Material('regular'))
+                .frame({ width: 200, height: 200}),
+
+        ])
+        .frame({ height: 350, width: 350 })
+        .background(Color('#fafafa'))
+    )
+}
+~~~END
+
+PickerTest ~~~BEGIN
+const body = (props, children) => {
+    const binding = useState("a");
+
+    return VStack([
+        Picker("Test Picker", binding, [
+            Text("Option 1").tag("a"),
+            Text("Option 2").tag("b"),
+            Text("Option 3").tag("c"),
+        ])
+            .padding('top', 80)
+            .pickerStyle('segmented'),
+
+        Spacer(),
+
+        HStack([
+            Text(binding[0])
+                .onTapGesture(() => {
+                    binding[1]("b")
+                })
+        ]).font(100).bold(),
+
+        Spacer()
+    ])
+        .padding(16)
+        .background(Color('background'))
+}
+~~~END
+
+TextEditorTest ~~~BEGIN
+const body = (props, children) => {
+  return VStack([
+    TextEditor("test")
+  ])
+}
+~~~END
+
+DividerTest ~~~BEGIN
+const body = (props, children) => {
+  return VStack({ spacing: 0 }, [
+    Text("Above"),
+    Divider(),
+    Text("Below").font(32)
+  ])
+}
+~~~END
+
+GroupTest ~~~BEGIN
+const body = (props, children) => {
+            return Group([
+                Text("Item 1").foregroundStyle(Color("blue")),
+                Text("Item 2").foregroundStyle(Color("blue"))
+            ])
+        }
+~~~END
+
+ProgressViewTest ~~~BEGIN
+const body = (props, children) => {
+          return VStack([
+            ProgressView(),
+            ProgressView({ value: 0.7 }).frame({ width: 300, height: 30 }),
+            ProgressView({ value: 35, total: 50 }),
+            ProgressView({ value: 0.5 })
+              .controlSize("large")
+              .foregroundStyle(Color("blue"))
+          ])
+        }
+~~~END
+
+TextModifiersTest ~~~BEGIN
+const body = (props, children) => {
+    return VStack([
+        Text("Sample Text bold").bold(),
+        Text("Sample Text italic").italic(),
+        Text("Sample Text strikethrough").strikethrough(),
+        Text("Sample Text underline").underline(),
+        Text("Sample Text monospaced").monospaced(),
+        Text("Sample Text tracking 500").tracking(500),
+        Text("Sample Text lineSpacing 8").lineSpacing(8),
+        Text("Sample Text uppercase").textCase("uppercase"),
+        Text("Sample Text lowercase").textCase("lowercase")
+    ])
+}
+~~~END
+
+LayoutPriorityTest ~~~BEGIN
+const body = (props, children) => {
+    return VStack([
+        RoundedRectangle()
+            .border({ style: Color("red"), width: 3 })
+            .frame({ width: 240 })
+            .layoutPriority(2),
+            RoundedRectangle()
+            .frame({ width: 240 })
+            .layoutPriority(1)
+    ])
+}
+~~~END
+
+BorderTest ~~~BEGIN
+const body = (props, children) => {
+    return VStack([
+        RoundedRectangle()
+            .border({ style: Color("red"), width: 3 })
+            .frame({ width: 240, height: 120 }),
+            RoundedRectangle()
+            .border({
+                style: LinearGradient({ colors: [Color("red"), Color("blue")] }),
+                width: 2
+            })
+            .frame({ width: 200, height: 120 })
+    ])
+}
+~~~END
+
+ButtonLinearGradientTest ~~~BEGIN
+const body = (props, children) => {
+    const [toggle, setToggle] = useState(false);
+
+    return (
+        Button({
+            action: () => {
+                setToggle(!toggle)
+            }, label: Text("My button is awesome")
+        })
+        .foregroundStyle(LinearGradient({
+            colors: [Color("blue"), Color("orange")],
+            startPoint: "top",
+            endPoint: "bottom"
+        }))
+        .background(LinearGradient({
+            colors: [Color("red"), Color("green")],
+            startPoint: "leading",
+            endPoint: "trailing"
+        }))
+        .frame({ width: 300, height: 280 })
+    )
+}
+~~~END
+
+CircleLinearGradientTest ~~~BEGIN
+const body = (props, children) => {
+    return Circle()
+        .foregroundStyle(LinearGradient({
+            colors: [Color("blue"), Color("orange")],
+            startPoint: "top",
+            endPoint: "bottom"
+        }))
+        .background(LinearGradient({
+            colors: [Color("red"), Color("green")],
+            startPoint: "leading",
+            endPoint: "trailing"
+        }))
+        .frame({ width: 300, height: 280 })
+}
+~~~END
+
+TextLinearGradientTest ~~~BEGIN
+const body = (props, children) => {
+    return Text("This is a test")
+        .font(50)
+        .foregroundStyle(LinearGradient({
+            colors: [Color("blue"), Color("orange")],
+            startPoint: "top",
+            endPoint: "bottom"
+        }))
+        .background(LinearGradient({
+            colors: [Color("red"), Color("green")],
+            startPoint: "leading",
+            endPoint: "trailing"
+        }))
+        .frame({ width: 300, height: 180 })
+}
+~~~END
+
+EllipticalGradientTest ~~~BEGIN
+const body = (props, children) => {
+    return EllipticalGradient({
+            colors: [Color("yellow"), Color("orange"), Color("red")],
+            center: { x: 0.5, y: 0.5 },
+            startRadius: 0,
+            endRadius: 100
+        })
+}
+~~~END
+
+RadialGradientTest ~~~BEGIN
+const body = (props, children) => {
+    return RadialGradient({
+        colors: [Color("red"), Color("green")],
+        center: { x: 0.5, y: 0.5 },
+        startRadius: 90,
+        endRadius: 180
+    })
+}
+~~~END
+
+AngularGradientTest ~~~BEGIN
+const body = (props, children) => {
+  return AngularGradient({
+          colors: [Color("red"), Color("yellow"), Color("green"), Color("blue"), Color("purple")],
+          center: { x: 0.5, y: 0.5 },
+          startAngle: 0,
+          endAngle: 270
+      })
+}
+~~~END
+
+LinearGradientTest ~~~BEGIN
+const body = (props, children) => {
+  return Ellipse()
+    .foregroundStyle(LinearGradient({
+      colors: [Color("blue"), Color("orange")],
+      startPoint: "top",
+      endPoint: "bottom"
+    }))
+    .background(LinearGradient({
+      colors: [Color("red"), Color("green")],
+      startPoint: "leading",
+      endPoint: "trailing"
+    }))
+    .frame({ width: 300, height: 180 })
+}
+~~~END
+
+LinearGradientTest2 ~~~BEGIN
+const body = (props, children) => {
+  return LinearGradient({
+               colors: [Color("blue"), Color("orange")],
+               startPoint: "top",
+               endPoint: "bottom"
+             })
+}
+~~~END
+
+LinearGradientTest3 ~~~BEGIN
+const body = (props, children) => {
+    const otherLinearGradient = (
+        LinearGradient({
+            colors: [
+                Color('green'),
+                Color('red'),
+                Color('green'),
+                Color('yellow'),
+                Color('purple'),
+            ]
+        })
+    );
+
+    const linearGradient = (
+        LinearGradient({
+            colors: [
+                Color('purple'),
+                Color('red')
+            ]
+        })
+    );
+
+    return (
+        VStack([
+            otherLinearGradient,
+            linearGradient
+        ])
+    )
+}
+~~~END
+
+Model3DAndSvgTest ~~~BEGIN
+const icon = `
+<svg width="18" height="21" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_35_521)">
+<mask id="mask0_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="-6" y="-5" width="31" height="31">
+<path d="M-5.74414 -4.66663H24.1282V25.6667H-5.74414V-4.66663Z" fill="white"/>
+</mask>
+<g mask="url(#mask0_35_521)">
+<mask id="mask1_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="-6" y="-5" width="31" height="31">
+<path d="M-5.74414 -4.66663H24.1282V25.6667H-5.74414V-4.66663Z" fill="white"/>
+</mask>
+<g mask="url(#mask1_35_521)">
+<path d="M11.4904 2.33335C11.4152 2.33336 11.3412 2.31324 11.276 2.27502L8.97811 0.937242L6.68024 2.27891C6.6312 2.30751 6.5771 2.32602 6.52102 2.33339C6.46493 2.34075 6.40797 2.33683 6.35338 2.32185C6.29879 2.30686 6.24765 2.2811 6.20286 2.24604C6.15808 2.21099 6.12053 2.16731 6.09236 2.11752C6.0642 2.06773 6.04597 2.01279 6.03872 1.95584C6.03146 1.8989 6.03532 1.84105 6.05008 1.78562C6.06484 1.73019 6.09021 1.67826 6.12473 1.63278C6.15926 1.5873 6.20226 1.54917 6.2513 1.52058L8.8096 0.0583532C8.87481 0.0201252 8.94877 0 9.02407 0C9.09936 0 9.17333 0.0201252 9.23853 0.0583532L11.7317 1.52446C11.8139 1.57431 11.8772 1.65062 11.9117 1.74124C11.9462 1.83186 11.9499 1.9316 11.9222 2.02459C11.8944 2.11758 11.8369 2.19848 11.7587 2.25443C11.6804 2.31038 11.586 2.33816 11.4904 2.33335Z" fill="#007AFF"/>
+<path d="M9.00511 13.8639C8.89135 13.8639 8.78225 13.818 8.7018 13.7363C8.62136 13.6546 8.57617 13.5438 8.57617 13.4283V10.5C8.57617 10.384 8.62157 10.2727 8.70237 10.1906C8.78317 10.1086 8.89275 10.0625 9.00702 10.0625C9.12129 10.0625 9.23088 10.1086 9.31168 10.1906C9.39248 10.2727 9.43787 10.384 9.43787 10.5V13.4322C9.43787 13.5477 9.39268 13.6585 9.31224 13.7402C9.2318 13.8219 9.1227 13.8678 9.00894 13.8678" fill="#007AFF"/>
+<path d="M0.430907 8.83169C0.374254 8.83169 0.318163 8.8203 0.26587 8.79817C0.213578 8.77603 0.166122 8.7436 0.126241 8.70275C0.0863598 8.66189 0.0548449 8.61341 0.0335154 8.56012C0.0121859 8.50683 0.0014644 8.44977 0.00197022 8.39225V5.44447C0.00197022 5.32895 0.0471615 5.21817 0.127603 5.13648C0.208044 5.0548 0.317146 5.00891 0.430907 5.00891C0.544668 5.00891 0.653769 5.0548 0.73421 5.13648C0.814651 5.21817 0.859842 5.32895 0.859842 5.44447V8.37669C0.859842 8.49221 0.814651 8.60299 0.73421 8.68467C0.653769 8.76636 0.544668 8.81224 0.430907 8.81224" fill="#007AFF"/>
+<path d="M17.5715 8.83169C17.4578 8.83169 17.3487 8.7858 17.2682 8.70412C17.1878 8.62243 17.1426 8.51165 17.1426 8.39613V5.44447C17.1426 5.32895 17.1878 5.21817 17.2682 5.13648C17.3487 5.0548 17.4578 5.00891 17.5715 5.00891C17.6853 5.00891 17.7944 5.0548 17.8748 5.13648C17.9553 5.21817 18.0005 5.32895 18.0005 5.44447V8.37669C18.0005 8.49221 17.9553 8.60299 17.8748 8.68467C17.7944 8.76636 17.6853 8.81224 17.5715 8.81224" fill="#007AFF"/>
+<path d="M17.5715 15.9444C17.4578 15.9444 17.3487 15.8985 17.2682 15.8168C17.1878 15.7352 17.1426 15.6244 17.1426 15.5089V12.5961C17.1426 12.4806 17.1878 12.3698 17.2682 12.2881C17.3487 12.2064 17.4578 12.1605 17.5715 12.1605C17.6853 12.1605 17.7944 12.2064 17.8748 12.2881C17.9553 12.3698 18.0005 12.4806 18.0005 12.5961V15.5283C17.9955 15.6404 17.9482 15.7463 17.8682 15.8238C17.7883 15.9013 17.682 15.9445 17.5715 15.9444Z" fill="#007AFF"/>
+<path d="M0.43089 15.9444C0.32037 15.9445 0.214072 15.9013 0.13416 15.8238C0.0542471 15.7463 0.00688698 15.6404 0.00195312 15.5283V12.5961C0.00195312 12.4806 0.0471444 12.3698 0.127586 12.2881C0.208027 12.2064 0.317129 12.1605 0.43089 12.1605C0.544651 12.1605 0.653751 12.2064 0.734193 12.2881C0.814634 12.3698 0.859825 12.4806 0.859825 12.5961V15.5283C0.854891 15.6404 0.807531 15.7463 0.727618 15.8238C0.647706 15.9013 0.541409 15.9445 0.43089 15.9444Z" fill="#007AFF"/>
+<path d="M9.00511 4.07167C8.89135 4.07167 8.78225 4.02579 8.7018 3.9441C8.62136 3.86242 8.57617 3.75164 8.57617 3.63612V0.439453C8.57617 0.323421 8.62157 0.212141 8.70237 0.130094C8.78317 0.0480468 8.89275 0.00195312 9.00702 0.00195312C9.12129 0.00195312 9.23088 0.0480468 9.31168 0.130094C9.39248 0.212141 9.43787 0.323421 9.43787 0.439453V3.63612C9.43787 3.75164 9.39268 3.86242 9.31224 3.9441C9.2318 4.02579 9.1227 4.07167 9.00894 4.07167" fill="#007AFF"/>
+<path d="M9.00511 21C8.89135 21 8.78225 20.9541 8.7018 20.8724C8.62136 20.7907 8.57617 20.6799 8.57617 20.5644V17.6322C8.57617 17.5162 8.62157 17.4049 8.70237 17.3228C8.78317 17.2408 8.89275 17.1947 9.00702 17.1947C9.12129 17.1947 9.23088 17.2408 9.31168 17.3228C9.39248 17.4049 9.43787 17.5162 9.43787 17.6322V20.5644C9.43788 20.6219 9.42666 20.6789 9.40486 20.732C9.38307 20.7851 9.35113 20.8333 9.31089 20.8738C9.27065 20.9143 9.22292 20.9463 9.17043 20.9679C9.11795 20.9896 9.06176 21.0005 9.00511 21Z" fill="#007AFF"/>
+<path d="M9.00545 21C8.93018 20.9998 8.85626 20.9797 8.79099 20.9417L6.27865 19.4678C6.17961 19.41 6.10723 19.3147 6.07743 19.2027C6.04762 19.0908 6.06283 18.9714 6.11971 18.8708C6.17659 18.7703 6.27048 18.6968 6.38073 18.6665C6.49098 18.6363 6.60855 18.6517 6.70758 18.7095L9.00545 20.0589L11.2689 18.725C11.3679 18.6667 11.4857 18.6508 11.5963 18.6807C11.7069 18.7106 11.8013 18.7839 11.8586 18.8845C11.916 18.985 11.9317 19.1046 11.9023 19.2169C11.8728 19.3292 11.8007 19.4251 11.7016 19.4833L9.21992 20.9417C9.15478 20.9801 9.08077 21.0002 9.00545 21Z" fill="#007AFF"/>
+<path d="M9.00411 10.9316C8.93661 10.933 8.86972 10.9184 8.80879 10.8889L6.30794 9.42274C6.20891 9.36498 6.13653 9.26965 6.10672 9.1577C6.07692 9.04575 6.09213 8.92636 6.14901 8.8258C6.20589 8.72524 6.29978 8.65174 6.41003 8.62147C6.52027 8.59121 6.63785 8.60665 6.73688 8.66441L9.03475 10.0061L11.3326 8.66441C11.3817 8.63556 11.4358 8.61679 11.492 8.60919C11.5482 8.60159 11.6053 8.60529 11.66 8.6201C11.7148 8.6349 11.7662 8.66052 11.8112 8.69548C11.8562 8.73044 11.894 8.77406 11.9224 8.82385C11.9508 8.87365 11.9693 8.92864 11.9768 8.98568C11.9843 9.04273 11.9806 9.10071 11.966 9.15632C11.9515 9.21193 11.9262 9.26408 11.8918 9.3098C11.8574 9.35551 11.8144 9.39389 11.7654 9.42274L9.22241 10.8889C9.15727 10.9272 9.08326 10.9474 9.00794 10.9472" fill="#007AFF"/>
+<path d="M15.0706 7.36562C14.9749 7.36718 14.8815 7.33621 14.8051 7.27764C14.7288 7.21906 14.6739 7.13624 14.6492 7.04235C14.6246 6.94846 14.6316 6.84889 14.6691 6.75948C14.7065 6.67008 14.7724 6.59597 14.8561 6.54895L17.3532 5.08284C17.4507 5.03209 17.5637 5.02117 17.6689 5.05233C17.7741 5.08349 17.8636 5.15436 17.9189 5.2504C17.9743 5.34644 17.9914 5.46035 17.9666 5.56876C17.9419 5.67718 17.8773 5.77187 17.7859 5.8334L15.2889 7.29951C15.2237 7.33773 15.1497 7.35785 15.0744 7.35784" fill="#007AFF"/>
+<path d="M17.5682 5.89946C17.4929 5.89947 17.4189 5.87935 17.3537 5.84113L14.8529 4.37502C14.7538 4.31726 14.6815 4.22192 14.6516 4.10997C14.6218 3.99802 14.637 3.87864 14.6939 3.77808C14.7508 3.67751 14.8447 3.60402 14.9549 3.57375C15.0652 3.54348 15.1828 3.55893 15.2818 3.61669L17.7827 5.0828C17.8664 5.12982 17.9323 5.20392 17.9697 5.29333C18.0072 5.38273 18.0142 5.4823 17.9895 5.57619C17.9649 5.67008 17.91 5.7529 17.8337 5.81148C17.7573 5.87006 17.6639 5.90103 17.5682 5.89946Z" fill="#007AFF"/>
+<path d="M2.93146 7.36562C2.85617 7.36562 2.78221 7.3455 2.717 7.30728L0.216146 5.83339C0.117113 5.77564 0.0447315 5.68029 0.0149252 5.56835C-0.0148812 5.4564 0.000329273 5.33701 0.0572097 5.23645C0.11409 5.13589 0.207981 5.06239 0.318229 5.03212C0.428476 5.00186 0.546049 5.0173 0.645082 5.07506L3.1421 6.54117C3.22585 6.58819 3.29171 6.6623 3.3292 6.7517C3.36669 6.84111 3.37366 6.94067 3.349 7.03457C3.32434 7.12846 3.26947 7.21128 3.19312 7.26986C3.11677 7.32843 3.02332 7.3594 2.92764 7.35784" fill="#007AFF"/>
+<path d="M0.429988 5.89948C0.334305 5.90105 0.240855 5.87008 0.164502 5.8115C0.0881498 5.75292 0.0332809 5.6701 0.00862382 5.57621C-0.0160332 5.48232 -0.0090621 5.38275 0.0284281 5.29335C0.0659182 5.20394 0.131774 5.12983 0.21552 5.08281L2.71254 3.62059C2.76158 3.59199 2.81568 3.57348 2.87176 3.56611C2.92784 3.55875 2.9848 3.56267 3.03939 3.57765C3.09398 3.59264 3.14513 3.6184 3.18992 3.65346C3.2347 3.68851 3.27225 3.73219 3.30041 3.78198C3.32858 3.83177 3.34681 3.88671 3.35406 3.94366C3.36132 4.00061 3.35746 4.05845 3.3427 4.11388C3.32794 4.16931 3.30257 4.22125 3.26805 4.26672C3.23352 4.3122 3.19051 4.35033 3.14148 4.37892L0.644456 5.83337C0.579179 5.87142 0.505257 5.89153 0.429988 5.8917" fill="#007AFF"/>
+<path d="M15.0667 17.4301C14.971 17.4316 14.8776 17.4007 14.8012 17.3421C14.7249 17.2835 14.67 17.2007 14.6453 17.1068C14.6207 17.0129 14.6277 16.9133 14.6651 16.8239C14.7026 16.7345 14.7685 16.6604 14.8522 16.6134L17.3569 15.1667C17.456 15.109 17.5735 15.0935 17.6838 15.1238C17.794 15.1541 17.8879 15.2276 17.9448 15.3281C18.0017 15.4287 18.0169 15.5481 17.9871 15.66C17.9573 15.772 17.8849 15.8673 17.7859 15.9251L15.2812 17.3717C15.2159 17.4098 15.142 17.4299 15.0667 17.4301Z" fill="#007AFF"/>
+<path d="M17.5721 15.9445C17.4968 15.9445 17.4228 15.9244 17.3576 15.8862L14.8568 14.4201C14.8077 14.3915 14.7647 14.3533 14.7302 14.3079C14.6957 14.2624 14.6703 14.2104 14.6556 14.155C14.6257 14.0431 14.641 13.9237 14.6978 13.8231C14.7547 13.7226 14.8486 13.6491 14.9589 13.6188C15.0691 13.5885 15.1867 13.604 15.2857 13.6617L17.7866 15.1667C17.8703 15.2137 17.9362 15.2879 17.9736 15.3773C18.0111 15.4667 18.0181 15.5662 17.9935 15.6601C17.9688 15.754 17.9139 15.8368 17.8376 15.8954C17.7612 15.954 17.6678 15.985 17.5721 15.9834" fill="#007AFF"/>
+<path d="M2.93087 17.43C2.8556 17.4298 2.78168 17.4097 2.7164 17.3717L0.215554 15.9055C0.137634 15.8391 0.0855219 15.7467 0.0685259 15.6448C0.05153 15.5429 0.0707577 15.4382 0.122774 15.3494C0.174791 15.2606 0.256207 15.1934 0.35248 15.16C0.448752 15.1265 0.55361 15.1289 0.64832 15.1667L3.14534 16.6328C3.22909 16.6798 3.29494 16.7539 3.33243 16.8433C3.36992 16.9327 3.37689 17.0323 3.35224 17.1262C3.32758 17.22 3.27271 17.3029 3.19636 17.3614C3.12001 17.42 3.02656 17.451 2.93087 17.4494" fill="#007AFF"/>
+<path d="M0.429988 15.9445C0.334305 15.9461 0.240855 15.9151 0.164502 15.8565C0.0881498 15.7979 0.0332809 15.7151 0.00862382 15.6212C-0.0160332 15.5273 -0.0090621 15.4278 0.0284281 15.3384C0.0659182 15.249 0.131774 15.1749 0.21552 15.1278L2.70871 13.6617C2.80774 13.6035 2.92552 13.5875 3.03612 13.6174C3.14673 13.6473 3.24111 13.7206 3.2985 13.8212C3.35589 13.9217 3.37158 14.0413 3.34214 14.1536C3.31269 14.2659 3.24051 14.3618 3.14148 14.4201L0.648286 15.9056C0.583078 15.9438 0.50911 15.964 0.433817 15.9639" fill="#007AFF"/>
+<mask id="mask2_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="10" height="6">
+<path d="M0.185547 0.190552H9.25065V5.71277H0.185547V0.190552Z" fill="white"/>
+</mask>
+<g mask="url(#mask2_35_521)">
+<g opacity="0.2">
+<path d="M0.430697 5.71277C0.376021 5.71367 0.32262 5.69597 0.27899 5.6625C0.23536 5.62902 0.204006 5.5817 0.189917 5.52804C0.175827 5.47439 0.179811 5.4175 0.201234 5.36641C0.222657 5.31532 0.260288 5.27297 0.308143 5.2461L8.88304 0.22166C8.91095 0.205318 8.94176 0.194719 8.97371 0.190467C9.00565 0.186215 9.03811 0.188395 9.06923 0.196881C9.10035 0.205368 9.12951 0.219994 9.15506 0.239926C9.18062 0.259859 9.20205 0.284706 9.21814 0.31305C9.23424 0.341393 9.24468 0.372678 9.24886 0.405118C9.25305 0.437558 9.2509 0.470518 9.24255 0.502116C9.23419 0.533713 9.21978 0.56333 9.20016 0.589275C9.18053 0.61522 9.15606 0.636985 9.12814 0.653327L0.55325 5.67777C0.516148 5.7002 0.473871 5.71227 0.430697 5.71277Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask3_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="5" width="18" height="11">
+<path d="M0.185547 5.21497H17.8141V15.7772H0.185547V5.21497Z" fill="white"/>
+</mask>
+<g mask="url(#mask3_35_521)">
+<g opacity="0.2">
+<path d="M0.430697 15.7772C0.376021 15.7781 0.32262 15.7604 0.27899 15.7269C0.23536 15.6934 0.204006 15.6461 0.189917 15.5925C0.175827 15.5388 0.179811 15.4819 0.201234 15.4308C0.222657 15.3797 0.260288 15.3374 0.308143 15.3105L17.4503 5.24608C17.5066 5.21307 17.5736 5.20416 17.6365 5.2213C17.6993 5.23843 17.7529 5.28022 17.7854 5.33746C17.8179 5.39471 17.8267 5.46272 17.8098 5.52653C17.7929 5.59035 17.7518 5.64474 17.6954 5.67774L0.55325 15.7422C0.516148 15.7646 0.473871 15.7767 0.430697 15.7772Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask4_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="8" y="0" width="10" height="6">
+<path d="M8.75977 0.190552H17.8134V5.71277H8.75977V0.190552Z" fill="white"/>
+</mask>
+<g mask="url(#mask4_35_521)">
+<g opacity="0.2">
+<path d="M17.5685 5.71289C17.5253 5.71239 17.4831 5.70032 17.446 5.67789L8.88257 0.653449C8.85465 0.637107 8.83018 0.615342 8.81055 0.589397C8.79092 0.563452 8.77652 0.533835 8.76816 0.502238C8.75981 0.47064 8.75766 0.43768 8.76185 0.40524C8.76603 0.3728 8.77647 0.341515 8.79257 0.313172C8.82507 0.255929 8.87864 0.214142 8.94148 0.197003C8.9726 0.188517 9.00506 0.186337 9.037 0.190589C9.06895 0.194841 9.09976 0.20544 9.12767 0.221783L17.6911 5.24623C17.7389 5.2731 17.7766 5.31544 17.798 5.36653C17.8194 5.41762 17.8234 5.47451 17.8093 5.52817C17.7952 5.58182 17.7639 5.62915 17.7202 5.66262C17.6766 5.69609 17.6232 5.71379 17.5685 5.71289Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask5_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="5" width="18" height="11">
+<path d="M0.185547 5.21497H17.8141V15.7772H0.185547V5.21497Z" fill="white"/>
+</mask>
+<g mask="url(#mask5_35_521)">
+<g opacity="0.2">
+<path d="M17.573 15.7773C17.5298 15.777 17.4875 15.7649 17.4505 15.7423L0.308347 5.67786C0.280434 5.66152 0.255964 5.63976 0.236335 5.61381C0.216706 5.58787 0.202301 5.55825 0.193944 5.52665C0.185587 5.49505 0.18344 5.46209 0.187627 5.42965C0.191814 5.39721 0.202253 5.36593 0.218347 5.33759C0.234441 5.30924 0.255875 5.2844 0.281426 5.26446C0.306976 5.24453 0.336143 5.2299 0.36726 5.22142C0.398378 5.21293 0.430837 5.21075 0.462784 5.215C0.494731 5.21925 0.525541 5.22985 0.553453 5.2462L17.6956 15.3106C17.7434 15.3375 17.7811 15.3799 17.8025 15.4309C17.8239 15.482 17.8279 15.5389 17.8138 15.5926C17.7997 15.6462 17.7684 15.6936 17.7247 15.727C17.6811 15.7605 17.6277 15.7782 17.573 15.7773Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask6_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="15" width="10" height="6">
+<path d="M0.185547 15.2756H9.25065V20.8134H0.185547V15.2756Z" fill="white"/>
+</mask>
+<g mask="url(#mask6_35_521)">
+<g opacity="0.2">
+<path d="M9.00579 20.8135C8.96262 20.813 8.92034 20.8009 8.88324 20.7785L0.308347 15.7229C0.251975 15.6899 0.210823 15.6355 0.193945 15.5717C0.177066 15.5079 0.185844 15.4399 0.218347 15.3826C0.25085 15.3254 0.304416 15.2836 0.367261 15.2665C0.430106 15.2493 0.497081 15.2582 0.553454 15.2912L9.12835 20.3468C9.1762 20.3737 9.21383 20.416 9.23526 20.4671C9.25668 20.5182 9.26066 20.5751 9.24657 20.6287C9.23248 20.6824 9.20113 20.7297 9.1575 20.7632C9.11387 20.7967 9.06047 20.8144 9.00579 20.8135Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask7_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="8" y="15" width="10" height="6">
+<path d="M8.75977 15.2756H17.8134V20.8134H8.75977V15.2756Z" fill="white"/>
+</mask>
+<g mask="url(#mask7_35_521)">
+<g opacity="0.2">
+<path d="M9.00491 20.8135C8.95024 20.8144 8.89684 20.7967 8.85321 20.7632C8.80958 20.7297 8.77823 20.6824 8.76414 20.6287C8.75005 20.5751 8.75403 20.5182 8.77545 20.4671C8.79688 20.416 8.83451 20.3737 8.88236 20.3468L17.4458 15.2912C17.5021 15.2582 17.5691 15.2493 17.632 15.2665C17.6948 15.2836 17.7484 15.3254 17.7809 15.3826C17.8134 15.4399 17.8222 15.5079 17.8053 15.5717C17.7884 15.6355 17.7472 15.6899 17.6909 15.7229L9.12747 20.7785C9.09037 20.8009 9.04809 20.813 9.00491 20.8135Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask8_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="5" width="1" height="11">
+<path d="M0.185547 5.21497H0.67576V15.7772H0.185547V5.21497Z" fill="white"/>
+</mask>
+<g mask="url(#mask8_35_521)">
+<g opacity="0.2">
+<path d="M0.430654 15.7772C0.365648 15.7772 0.303303 15.751 0.257337 15.7043C0.211371 15.6576 0.185547 15.5943 0.185547 15.5283V5.44445C0.185547 5.37844 0.211371 5.31513 0.257337 5.26845C0.303303 5.22178 0.365648 5.19556 0.430654 5.19556C0.49566 5.19556 0.558003 5.22178 0.60397 5.26845C0.649936 5.31513 0.67576 5.37844 0.67576 5.44445V15.5283C0.67576 15.5943 0.649936 15.6576 0.60397 15.7043C0.558003 15.751 0.49566 15.7772 0.430654 15.7772Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask9_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="17" y="5" width="1" height="11">
+<path d="M17.3223 5.21497H17.8125V15.7772H17.3223V5.21497Z" fill="white"/>
+</mask>
+<g mask="url(#mask9_35_521)">
+<g opacity="0.2">
+<path d="M17.5713 15.7772C17.5063 15.7772 17.4439 15.751 17.398 15.7043C17.352 15.6576 17.3262 15.5943 17.3262 15.5283V5.44445C17.3262 5.37844 17.352 5.31513 17.398 5.26845C17.4439 5.22178 17.5063 5.19556 17.5713 5.19556C17.6363 5.19556 17.6986 5.22178 17.7446 5.26845C17.7906 5.31513 17.8164 5.37844 17.8164 5.44445V15.5283C17.8164 15.5943 17.7906 15.6576 17.7446 15.7043C17.6986 15.751 17.6363 15.7772 17.5713 15.7772Z" fill="#007AFF"/>
+</g>
+</g>
+<mask id="mask10_35_521" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="8" y="0" width="2" height="21">
+<path d="M8.75977 0.190552H9.24998V20.7861H8.75977V0.190552Z" fill="white"/>
+</mask>
+<g mask="url(#mask10_35_521)">
+<g opacity="0.2">
+<path d="M9.00487 20.7861C8.93987 20.7861 8.87752 20.7599 8.83156 20.7132C8.78559 20.6665 8.75977 20.6032 8.75977 20.5372V0.439441C8.75977 0.373431 8.78559 0.310126 8.83156 0.26345C8.87752 0.216774 8.93987 0.190552 9.00487 0.190552C9.06988 0.190552 9.13222 0.216774 9.17819 0.26345C9.22415 0.310126 9.24998 0.373431 9.24998 0.439441V20.5372C9.24998 20.6032 9.22415 20.6665 9.17819 20.7132C9.13222 20.7599 9.06988 20.7861 9.00487 20.7861Z" fill="#007AFF"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_35_521">
+<rect width="18" height="21" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+`;
+
+const ARIcon = (props, children) => {
+    return Image({ svg: icon }).foregroundStyle(Color('accent'))
+};
+
+const AssetPlaceholder = (props, children) => {
+    return Rectangle().fill(Color('primary').opacity(0.1))
+};
+
+const ButtonBackgroundColor = (props, children) => {
+    return useEnvironment().colorScheme == 'dark' ? Color('#212227') : Color("#EFF0F5")
+};
+
+const body = (props, children) => {
+    let env = useEnvironment();
+
+    let model = Model3D({
+        url: 'https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/3a73ea8a-98f9-41df-9ad6-f413d1c5ea9e/assets/312be462-5f70-44c4-9aee-7908d6939ae9/realistic_human_heart-2.glb',
+        cameraControls: props.cameraControls ?? true,
+        autoRotate: props.autoRotate ?? false
+    });
+
+    return (
+        VStack({ spacing: 12 }, [
+            model
+                .frame({ maxWidth: Infinity, maxHeight: 280 }),
+
+            ARModelButton()
+        ])
+            .frame({ maxHeight: 400 })
+    )
+};
+
+const ARModelButton = makeComponent((props, body) => {
+    return (
+        HStack({ alignment: 'center' }, [
+            ARIcon().frame({ width: 24, height: 24 }).offset({ y: 1 }),
+            Text("Explore in AR")
+        ])
+            .padding(14)
+            .padding('horizontal', 24)
+            .foregroundStyle(Color('black'))
+            .background(RoundedRectangle({ cornerRadius: 9 }).fill(ButtonBackgroundColor()))
+    )
+});
+
+const properties = (props) => ({
+    'asset': PropertyAsset({
+        title: "Model",
+        assetTypes: ["model"]
+    }),
+
+    'caption': PropertyString({
+        title: "Caption",
+        inspector: { multiline: false }
+    }),
+
+    'cameraControls': PropertyBoolean({
+        title: "Camera Controls",
+        defaultValue: true
+    }),
+
+    'autoRotate': PropertyBoolean({
+        title: "Auto Rotate",
+        defaultValue: false
+    })
+});
+~~~END
+
+ColorTest ~~~BEGIN
+const body = (props, children) => {
+    return Color('red')
+}
+~~~END
+
+ColorTest2 ~~~BEGIN
+const body = (props, children) => {
+    return Color('red').frame({ width: 300, height: 180 })
+}
+~~~END
+
+EllipseTest2 ~~~BEGIN
+const body = () =>
+    Ellipse()
+        .foregroundStyle(Color("red"))
+        .frame({ width: 300, height: 180 })
+~~~END
+
+CapsuleTest2 ~~~BEGIN
+const body = () =>
+    Capsule()
+        .foregroundStyle(Color("orange"))
+        .frame({ width: 80, height: 40 })
+~~~END
+
+RoundedRectangleTest2 ~~~BEGIN
+const body = () =>
+    RoundedRectangle({ cornerRadius: 10 })
+        .foregroundStyle(Color("green"))
+        .frame({ width: 120, height: 60 })
+~~~END
+
+FrameTest ~~~BEGIN
+const body = (props, children) => {
+  return Text("test test test test test")
+    .frame({ width: 200, height: 100, alignment: "bottomLeading" })
+    .background(Color("red"))
+}
+~~~END
+
+RectangleTest ~~~BEGIN
+const body = (props, children) => {
+    return Rectangle()
+        .foregroundStyle(Color("red"))
+        .frame({ width: 100, height: 50 })
+}
+~~~END
+
+ProjectThumbnail ~~~BEGIN
+const body = (props, children) => {
+    return Image({ url: 'https://cdn-dev.metabind.com/213236ac-f3a9-416a-b371-d13bee51593e/2f2a2d30-f894-43f9-a2b5-17569b90fbf8/assets/f652246a-b717-4c9e-b5a9-cb41370382dc/icon-AppStore.png' })
+}
+~~~END
+
+ButtonTest ~~~BEGIN
+const body = () => Button('press me').foregroundStyle(Color('white'))
+~~~END
+
+ForEachTest ~~~BEGIN
+const body = () => 
+        VStack([
+            ForEach([Rectangle, Rectangle, Circle], (element, index) =>
+                index == 1 ? element().frame({width: 50, height: 50}) : element().frame({width: 100, height: 100}).foregroundStyle(Color('red'))
+            ),
+        Text("Dashboard")
+                            .fontSize(25)
+                            .fontWeight('semibold')
+                            .foregroundStyle(Color('primary'))
+                            .opacity(0.5) 
+        ])
+~~~END
+
+ForEachTest2 ~~~BEGIN
+const body = (props, children) => {
+          const items = ["Apple", "Banana", "Cherry"];
+        
+          const users = [
+            { id: 1, name: "Alice" },
+            { id: 2, name: "Bob" }
+          ];
+        
+          return VStack([
+            ForEach(items, (item, index) =>
+              Text(items[index])
+                .padding()
+            ),
+        
+            ForEach(users, (item, index) =>
+              HStack({ spacing: 4 }, [
+                Text(item.name),
+                Spacer(),
+                Text(`ID: ${item.id}`).font("caption")
+              ])
+            )
+          ])
+        }
+~~~END
+
+MyHome ~~~BEGIN
+const body = () =>
+            ScrollView({ showsIndicators: false }, [
+                VStack({ alignment: 'leading', spacing: 15 }, [
+                    VStack({ spacing: 0, alignment: 'leading' }, [
+                        Text("Dashboard")
+                            .fontSize(15)
+                            .fontWeight('semibold')
+                            .foregroundStyle(Color('primary'))
+                            .opacity(0.5),
+                        Text('23 Home St')
+                            .fontSize(27)
+                            .bold(),
+                        Image({
+                            url: 'https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg'
+                        })
+                            .foregroundStyle(Color('gray'))
+                            .cornerRadius(20)
+                            .frame({ width: 425 - 32, height: 200 })
+                            .padding({ top: 20 }),
+                    ])
+                    .padding({ top: 64 }),
+           ScrollView({ axis: 'horizontal', showsIndicators: false }, [
+                        Rail()
+                            .padding({ bottom: 29 })
+                    ])
+                    .frame({ width: 425 - 32 }),
+        Section(
+                        Text("Interior & Exterior")
+                            .font(23)
+                            .fontWeight('semibold'),
+                        [
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Levels & Floorplans',
+                                subtitle: 'View floor plans for every level'
+                            }),
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Interior Spaces',
+                                subtitle: 'Browse interior measurements'
+                            }),
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Doors & Windows',
+                                subtitle: 'Measure doors & windows'
+                            })
+                        ]
+                    ),
+        Section(
+                        Text("Your Library")
+                            .font(23)
+                            .fontWeight('semibold'),
+                        [
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Appliances',
+                                subtitle: 'Browse interior measurements'
+                            }),
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Documents',
+                                subtitle: 'Browse Documents & Photos'
+                            })
+                        ]
+                    ),
+
+                    Section(
+                        Text("Discover")
+                            .font(23)
+                            .fontWeight('semibold'),
+                        [
+                            ContentCard({
+                                width: 425 - 32,
+                                title: 'Local Services',
+                                subtitle: 'Browse Documents & Photos'
+                            })
+                        ]
+                    )
+        ]).padding() ])
+~~~END
+
+OnTapTest ~~~BEGIN
+const body = () => Text('Hello World').foregroundStyle(Color('primary')).onTapGesture(() => { console.log('Hello World!!!!!') })
+~~~END
+
+OnTapTest2 ~~~BEGIN
+const body = () => Text('Hello World').foregroundStyle(Color('primary')).onTapGesture(() => { console.log('Hello World!!!!!') }).allowsHitTesting(false)
+~~~END
+
+RailCard ~~~BEGIN
+const body = ({
+            subtitle = "Interior",
+            title = "2,123 sq ft",
+            imageName = "square.split.bottomrightquarter",
+            tint = Color('blue'),
+            width = 130
+        }) => {
+            return ZStack({alignment: 'center'}, [
+                Rectangle()
+                    .frame({width: width, height: 100})
+                    .foregroundStyle(Color('background'))
+                    .cornerRadius(16),
+
+                ZStack([
+                    Circle()
+                        .foregroundStyle(tint)
+                        .frame({width: 26, height: 26}),
+                    Image({systemName: imageName})
+                        .foregroundStyle(Color('white'))
+                        .offset({y: 0})
+                        .fontSize(12)
+                ])
+                .offset({x: -width / 2 + 26, y: -26}),
+
+                Image({systemName: "chevron.right"})
+                    .foregroundStyle(Color('gray'))
+                    .opacity(0.5)
+                    .frame({width: 16, height: 26})
+                    .offset({x: width / 2 - 16, y: -23}),
+
+                VStack({alignment: 'leading'}, [
+                    Text(subtitle.toUpperCase())
+                        .fontSize(10)
+                        .bold()
+                        .foregroundStyle(Color('primary')).opacity(0.5),
+                    Text(title)
+                        .fontSize(16)
+                        .bold()
+                ])
+                .offset({x: -width / 2 + 52, y: 20})
+            ])
+            .frame({width: width, height: 100})
+            .compositingGroup()
+        }
+~~~END
+
+Rail ~~~BEGIN
+const body = () =>
+                HStack({ spacing: 10 }, [
+                    RailCard({
+                        subtitle: "Interior",
+                    }),
+                    RailCard({
+                        subtitle: "Exterior",
+                        title: "8,850 sq ft",
+                        imageName: "tree.fill",
+                        tint: Color('green')
+                    }),
+
+                    RailCard({
+                        subtitle: "Garage",
+                        title: "870 sq ft",
+                        tint: Color('gray')
+                    })
+                ])
+                .shadow({y: 6, radius: 12, color: Color({
+                        red: 0.0,
+                        green: 0,
+                        blue: 0,
+                    alpha: 0.08
+                })
+                })
+~~~END
+                
+ContentCard ~~~BEGIN
+const body = ({
+            subtitle = "View floor plans for every level",
+            title = "Levels & Floorplans",
+            imageName = "1.circle.fill",
+            tint = Color('blue'),
+            width = null
+        }) =>
+            ZStack([
+                Rectangle()
+                    .frame({width: width, height: 100})
+                    .foregroundStyle(Color('background'))
+                    .cornerRadius(16),
+                VStack({spacing: 4, alignment: 'leading'}, [
+                    HStack({alignment: 'center'}, [
+                        ZStack([
+                            Image({systemName: imageName})
+                                .foregroundStyle(tint)
+                                .offset({x: -4, y: 0})
+                                .fontSize(19)
+                        ]).frame({width: 26, height: 26}),
+                        Spacer(),
+                        Image({systemName: "chevron.right"})
+                            .foregroundStyle(Color('gray'))
+                            .opacity(0.5)
+                            .frame({width: 8, height: 12}),
+                    ]),
+                    VStack({alignment: 'leading'}, [
+                        Text(title)
+                            .fontSize(17)
+                            .fontWeight('semibold'),
+                        Text(subtitle)
+                        .fontSize(15)
+                        .foregroundStyle(Color('primary')).opacity(0.5),
+                    ])
+                ])
+                .padding()
+                .frame({ maxWidth: Infinity })
+            ])
+            .frame({ maxWidth: Infinity, width: width, height: 110 })
+            .compositingGroup()
+            .cornerRadius(16)
+            .shadow({y: 12, radius: 14, color: Color({
+                red: 0.0,
+                green: 0,
+                blue: 0,
+                alpha: 0.1
+            })
+            })
+~~~END
+
+StateTest ~~~BEGIN
+const body = () => { 
+            let [count, setCount] = useState(0); 
+            let [mult, setMult] = useState(1); 
+            return VStack([
+                Text(count * mult).onTapGesture(() => {
+                    setCount(count + 1)
+                }),
+                Text(mult).onTapGesture(() => {
+                    setMult(mult + 1)
+                })
+            ]).fontSize(180)
+        }
+~~~END
+
+VStackTest ~~~BEGIN
+const body = () => 
+            VStack([
+                Circle().frame({width: 200, height: 200}),
+                Circle().frame({width: 100, height: 100}),
+                Text('Hello World')
+            ])
+~~~END

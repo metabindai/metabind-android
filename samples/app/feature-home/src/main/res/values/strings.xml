@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_greeting">Hello, %1$s!</string>
+    <string name="home_log_out">Log Out</string>
+    <string name="home_opaque_detail">Opaque detail</string>
+    <string name="home_opaque_detail_with_error">Opaque detail with error</string>
+    <string name="home_transparent_detail">Transparent detail</string>
+</resources>

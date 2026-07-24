@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Metabind Assistant Demo</string>
+    <string name="key_entry_title">Enter your Metabind API key</string>
+    <string name="key_entry_subtitle">Routed through the Metabind Agent proxy — no provider keys in the app.</string>
+    <string name="key_entry_placeholder">mb_…</string>
+    <string name="key_entry_start">Start</string>
+</resources>

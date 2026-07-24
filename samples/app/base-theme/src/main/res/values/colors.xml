@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- These colors should be kept in sync with the Compose colors in base-ui/Color.kt -->
+    <!-- We should only use these colors when necessary (just the SplashScreen for now). -->
+    <color name="status_bar">#80202020</color>
+    <color name="branding_color_1">#FF324DC7</color>
+    <color name="branding_color_2">#FF2A3694</color>
+    <color name="quiz_positive_background">#0D039C1C</color>
+    <color name="quiz_positive_icon">#20D43D</color>
+    <color name="quiz_positive_text">#005C0F</color>
+    <color name="quiz_negative_background">#12990000</color>
+    <color name="quiz_negative_icon">#D42056</color>
+    <color name="quiz_negative_text">#690000</color>
+    <color name="quiz_neutral_icon">#CDCDCD</color>
+    <color name="quiz_result_secondary_text">#D6DBF4</color>
+</resources>
