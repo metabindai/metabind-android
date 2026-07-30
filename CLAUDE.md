@@ -43,7 +43,7 @@ cd samples/assistant-demo && ./gradlew :app:assembleDebug
 
 ## Build Configuration
 
-- Gradle 9.0.1 with Kotlin DSL, version catalog at `gradle/libs.versions.toml`
+- Gradle 9.4 (AGP 9.0.1) with Kotlin DSL, version catalog at `gradle/libs.versions.toml`
 - Compile SDK 36, Min SDK 26, Java 21
 - Apollo GraphQL code generation: schemas in `metabind-content/src/main/graphql/`, generated code in `metabind-content/build/generated/`
 
