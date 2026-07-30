@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        mavenLocal() // for SDK development against `publishToMavenLocal` builds of metabind-ai-android
+        mavenLocal() // for SDK development against `publishToMavenLocal` builds of the monorepo SDKs
         maven {
             url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {

@@ -103,17 +103,16 @@ ViewModels follow a consistent pattern with delegates:
 
 ## Key Technologies
 
-- **Kotlin 2.3.10** with coroutines for async operations
-- **Jetpack Compose** (1.9.4) for UI with **Material3**
-- **Compose Compiler Plugin** for Compose integration
-- **Dagger Hilt** (2.58) for dependency injection
-- **Metabind Content** (`metabind-content-android`, unified 0.2.0) for dynamic component rendering
-- **Room** (2.8.3) for local persistence
+- **Kotlin** with coroutines for async operations (versions live in `gradle/libs.versions.toml` — treat that catalog as the source of truth)
+- **Jetpack Compose** for UI with **Material3**, via the Compose Compiler Plugin
+- **Dagger Hilt** for dependency injection
+- **Metabind Content** (`metabind-content-android`, the unified SDK version) for dynamic component rendering
+- **Room** for local persistence
 - **Gson** for JSON serialization
 - **Timber** for logging
-- **CameraX** (1.4.1) and ML Kit barcode scanning
-- **Coil** (2.7.0) for image loading
-- **Media3/ExoPlayer** (1.5.0) for video playback
+- **CameraX** and ML Kit barcode scanning
+- **Coil** for image loading
+- **Media3/ExoPlayer** for video playback
 
 ## Development Notes
 
@@ -141,9 +140,6 @@ Always add feature dependencies in feature module build.gradle.kts files.
 - **debugRelease**: Custom variant for testing
 - Dynamic features are included via `dynamicFeatures += setOf(":dynamicfeature")`
 
-### Git Worktrees
-
-Create worktrees in the sibling directory `../yap-content-builder-android-worktrees/`.
 
 ### Testing
 

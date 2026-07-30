@@ -1,8 +1,8 @@
 # Metabind Assistant Demo (Android)
 
-A Jetpack Compose chat app showcasing the [`metabind-ai-android`](https://github.com/yapstudios/metabind-ai-android) SDK — the high-level conversational wrapper that orchestrates an LLM + MCP tool execution + native Compose rendering of tool UIs.
+A Jetpack Compose chat app showcasing the `metabindai-android` Assistant SDK (the `:metabindai` module of [`metabind-android`](https://github.com/metabindai/metabind-android)) — the high-level conversational wrapper that orchestrates an LLM + MCP tool execution + native Compose rendering of tool UIs.
 
-The Apple counterpart lives at [`metabind-assistant-demo-apple`](https://github.com/yapstudios/metabind-assistant-demo-apple).
+The Apple counterpart lives at [`metabind-apple/Samples/MetabindAI/AssistantDemo`](https://github.com/metabindai/metabind-apple/tree/main/Samples/MetabindAI/AssistantDemo).
 
 ## What it does
 
@@ -103,18 +103,18 @@ For MCP-app HTML (the `WebView` path), `HomeScreen.buildMcpAppHostHtml` wraps th
 
 ## Local development against the SDK
 
-To iterate on the SDK locally without republishing, uncomment the `includeBuild` block in `settings.gradle.kts`:
+This sample builds against the in-tree SDK sources by default: `settings.gradle.kts` uses a composite build onto the monorepo root, substituting the published artifacts for the local modules:
 
 ```kotlin
-includeBuild("../metabind-ai-android") {
+includeBuild("../..") {
     dependencySubstitution {
         substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
-        substitute(module("ai.metabind:metabind-assistant-android")).using(project(":metabindassistant"))
+        substitute(module("ai.metabind:metabindai-android")).using(project(":metabindai"))
     }
 }
 ```
 
-Then `:app` builds against the local SDK sources.
+Edits in `../../metabindai` or `../../mcpappshost` flow into the next `:app:installDebug` build without publishing. BindJS (`ai.metabind:bindjs-android`) stays a published artifact from its own repo and isn't substituted.
 
 ## Logging
 

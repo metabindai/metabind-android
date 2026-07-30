@@ -1,10 +1,10 @@
 # Metabind for Android
 
-The native Android SDK for Metabind. Embed a governed AI agent in your Android app, and render Metabind-managed content as native Jetpack Compose.
+The native Android SDK for Metabind. Embed a governed agent in your Android app, and render Metabind-managed content as native Jetpack Compose.
 
 ## What this is
 
-Metabind is the agentic layer for your app. It turns your existing UI and APIs into a governed agent: a standards-compliant [Model Context Protocol (MCP)](https://modelcontextprotocol.io) App that understands what each customer came for, renders real interactive UI instead of plain text, and runs both inside your own app and across Claude, ChatGPT, and every MCP host. The agent is governed, not autonomous. It follows the system prompt you author, and it can only render components you approved, validated against each tool's schema on every render.
+Metabind is the hosted platform for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) Apps: you define the tools, and Metabind runs the server. It turns your existing UI and APIs into a governed agent — a standards-compliant MCP App that understands what each customer came for, renders interactive UI instead of plain text, and runs both inside your own app and across Claude, ChatGPT, and every MCP host. The agent is governed, not autonomous. It follows the system prompt you author, and it can only render components you approved, validated against each tool's schema on every render.
 
 This repository is the Android side. It ships three libraries you can adopt independently:
 
@@ -17,7 +17,28 @@ This repository is the Android side. It ships three libraries you can adopt inde
 Everything renders through BindJS as real native Jetpack Compose, not web views. The three libraries have different dependency footprints, so you depend only on the ones you use: a content-only app doesn't link the assistant, and an assistant-only app doesn't link the GraphQL client.
 
 > [!NOTE]
-> BindJS is Metabind's rendering engine. This SDK links it as a precompiled binary (`ai.metabind:bindjs-android`, published to GitHub Packages). The BindJS authoring layer and React renderer are Apache 2.0; the native SwiftUI and Jetpack Compose runtimes are proprietary and ship with the SDK.
+> BindJS is Metabind's rendering engine. This SDK links it as a precompiled binary (`ai.metabind:bindjs-android`, published to GitHub Packages). All of BindJS is open source under Apache 2.0: the runtime and React renderer, and the native SwiftUI and Jetpack Compose engines.
+
+## The Metabind SDKs
+
+| Platform | Repository |
+|---|---|
+| iOS, macOS, visionOS | [`metabind-apple`](https://github.com/metabindai/metabind-apple) |
+| Android | `metabind-android` — this repository |
+| Web (React) | [`metabind-web`](https://github.com/metabindai/metabind-web) |
+
+One MCP App serves all three: the same tools, components, and agent configuration from a single publish, so the SDKs compose — ship the Android assistant, the iOS assistant, and the web chat surface together.
+
+**[🚀 Start free at metabind.ai](https://metabind.ai)** · **[📖 Read the docs](https://docs.metabind.ai)**
+
+## Documentation
+
+The full guides live on [docs.metabind.ai](https://docs.metabind.ai):
+
+- [Android SDK guide](https://docs.metabind.ai/guides/assistant-sdk/android-sdk) — install, the chat surface, the `MetabindAssistant` API, streaming and custom UIs
+- [LLM provider configuration](https://docs.metabind.ai/guides/assistant-sdk/llm-provider-configuration) — key custody and how the Agent proxy runs the tool loop
+- [Content SDK guide](https://docs.metabind.ai/content/mobile-sdks/android-sdk) — `metabind-content-android` end to end
+- [BindJS reference](https://docs.metabind.ai/bindjs/introduction) — the component language tool UIs are written in
 
 ## Requirements
 
@@ -74,7 +95,7 @@ dependencies {
 
 ## MetabindAI: embed the agent
 
-`:metabindai` is the Assistant SDK. It embeds your Metabind agent inside your own app, calling real tools and rendering real interactive UI as native Compose, governed by the same MCP App you publish to Claude, ChatGPT, and every other MCP host.
+`:metabindai` is the Assistant SDK. It embeds your Metabind agent inside your own app, calling real tools and rendering interactive UI as native Compose, governed by the same MCP App you publish to Claude, ChatGPT, and every other MCP host.
 
 When a tool returns a `ui` resource, the SDK fetches the BindJS bundle and renders it as native Compose, the same interface a person sees in Claude or ChatGPT, running natively inside your app.
 
@@ -83,20 +104,20 @@ When a tool returns a `ui` resource, the SDK fetches the BindJS bundle and rende
 ```kotlin
 import ai.metabind.ai.MetabindAssistant
 import ai.metabind.ai.MetabindAssistantView
-import ai.metabind.ai.MetabindAgentProvider
 
 @Composable
 fun AssistantScreen(apiKey: String, org: String, project: String) {
     val assistant = remember {
-        MetabindAssistant(
-            serverUrl = "https://mcp.metabind.ai/$org/projects/$project",
-            serverHeaders = mapOf("authorization" to "Bearer $apiKey"),
-            provider = MetabindAgentProvider(apiKey = apiKey, orgId = org, projectId = project),
-        )
+        MetabindAssistant(apiKey = apiKey, orgId = org, projectId = project)
     }
     MetabindAssistantView(assistant = assistant)
 }
 ```
+
+The assistant derives the MCP server URL from your org and project ids; the optional `agentHost` and `mcpHost` parameters override the production endpoints.
+
+> [!NOTE]
+> Retain the `MetabindAssistant` instance at an appropriate scope — inside a ViewModel, for example — and call `close()` when you discard it. The Android SDK is Agent-proxy only: there's no bring-your-own-key provider, so no LLM credential ever ships in your APK.
 
 One Metabind API key authenticates both the MCP server and the agent proxy.
 
@@ -195,3 +216,7 @@ then resolve `ai.metabind:*-android` from GitHub Packages like any other depende
 GraphQL schema and operations for the content module live in
 `metabind-content/src/main/graphql/`; Apollo generates the client into
 `metabind-content/build/generated/`.
+
+## License
+
+Apache License 2.0. See [`LICENSE`](LICENSE).
