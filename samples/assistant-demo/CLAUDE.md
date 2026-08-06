@@ -165,7 +165,7 @@ Quick filter while debugging tool UIs:
 adb logcat MetabindAgentProvider:V HomeViewModel:V JsRuntimeImpl:V BindJSHost:V BindJSToolBubble:V JSConsole:V *:S
 ```
 
-## Releasing
+## Releasing (maintainers)
 
 Shipping to consumers now means releasing from the `metabind-android` monorepo root:
 publish `bindjs-android` (separate repo) if it changed, then publish the three libraries
