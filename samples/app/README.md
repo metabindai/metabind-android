@@ -1,6 +1,6 @@
 # Metabind App Android
 
-An Android demo app that renders dynamic UI components from the Metabind service. The app uses the [Metabind library](https://github.com/yapstudios/bindjs-android-binary) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
+An Android demo app that renders dynamic UI components from the Metabind service. The app uses the [Metabind library](https://github.com/metabindai/bindjs-android-binary) to interpret and display SwiftUI-like declarative component descriptions natively with Jetpack Compose.
 
 ## Features
 
