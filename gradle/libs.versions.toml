@@ -5,7 +5,7 @@ metabind = "0.2.0"
 
 # Toolchain / SDK
 agp = "9.3.1"
-kotlin = "2.4.10"
+kotlin = "2.3.21"
 android-compile-sdk = "36"
 android-min-sdk = "26"
 android-target-sdk = "36"
