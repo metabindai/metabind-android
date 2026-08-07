@@ -7,9 +7,14 @@ plugins {
 
 android {
 
+    compileSdk {
+        version = release(libs.versions.android.compile.sdk.get().toInt()) {
+            minorApiLevel = 1
+        }
+    }
+
     defaultConfig {
         applicationId = "ai.metabind.app"
-        compileSdk = libs.versions.android.compile.sdk.get().toInt()
         minSdk = libs.versions.android.min.sdk.get().toInt()
         targetSdk = libs.versions.android.target.sdk.get().toInt()
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "9").toInt()

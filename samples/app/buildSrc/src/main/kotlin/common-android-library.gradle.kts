@@ -7,8 +7,13 @@ val vce = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 android {
 
+    compileSdk {
+        version = release(vce.findVersion("android-compile-sdk").get().requiredVersion.toInt()) {
+            minorApiLevel = 1
+        }
+    }
+
     defaultConfig {
-        compileSdk = vce.findVersion("android-compile-sdk").get().requiredVersion.toInt()
         minSdk = vce.findVersion("android-min-sdk").get().requiredVersion.toInt()
     }
 
