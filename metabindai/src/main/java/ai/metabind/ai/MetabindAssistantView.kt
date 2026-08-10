@@ -668,6 +668,7 @@ private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: Ui
             )
             is UiEvent.OnLongPress -> jsRuntime.callEventHandler(event.handlerId)
             is UiEvent.OnSwitch -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.checked))
+            is UiEvent.OnTextChange -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.text))
             // Coalesced + serialized inside bindjs (latest-wins on the `changed`
             // phase); re-renders via the setOnRerenderRequested listener.
             is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)

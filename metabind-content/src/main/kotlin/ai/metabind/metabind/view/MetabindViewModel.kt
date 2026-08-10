@@ -112,6 +112,7 @@ class MetabindViewModel(
             is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
             is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
             is UiEvent.OnSwitch -> callEventHandler(event.handlerId, arrayOf(event.checked))
+            is UiEvent.OnTextChange -> callEventHandler(event.handlerId, arrayOf(event.text))
             is UiEvent.OnChartSelection -> callEventHandler(event.handlerId, arrayOf(event.value))
         }
     }
