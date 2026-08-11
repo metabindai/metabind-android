@@ -77,7 +77,13 @@ dependencies {
     implementation(libs.android.compose.material)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.gson)
-    implementation(libs.apollo.runtime)
+    // `api`, not `implementation`: every read on ComponentRepository hands back an
+    // Apollo-generated fragment (PackageFields, ContentFields, …) and those implement
+    // `com.apollographql.apollo.api.Fragment.Data`. As `implementation` the supertype is
+    // off a consumer's compile classpath, so merely touching a return value fails with
+    // "Cannot access 'Fragment.Data' … check your module classpath" and every consumer
+    // has to re-declare Apollo at a version that matches ours.
+    api(libs.apollo.runtime)
     implementation(libs.apollo.cache)
     implementation(libs.apollo.normalized.cache)
     api(libs.bindjs)
