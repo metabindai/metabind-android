@@ -1,7 +1,7 @@
 [versions]
 # Unified version for all published Metabind libraries
 # (metabind-content-android, mcpappshost-android, metabindai-android).
-metabind = "0.2.2"
+metabind = "0.2.3"
 
 # Toolchain / SDK
 agp = "9.0.1"
@@ -21,7 +21,7 @@ apollo = "4.4.1"
 lifecycleViewmodelCompose = "2.9.1"
 
 # BindJS (published GitHub Packages artifact, kept separate)
-bindjs = "0.0.22"
+bindjs = "0.0.23"
 
 # AI SDK (:mcpappshost, :metabindai)
 okhttp = "4.12.0"
