@@ -144,7 +144,7 @@ class MetabindViewModel(
         }
     }
 
-    private fun callEventHandler(handlerId: String, data: Array<Any> = emptyArray()) {
+    private fun callEventHandler(handlerId: String, data: Array<Any?> = emptyArray()) {
         (_uiState.value as? UiState.Success)?.let { state ->
             viewModelScope.launch(Dispatchers.IO) {
                 Log.d(TAG, "Call eventHandler. $handlerId")
