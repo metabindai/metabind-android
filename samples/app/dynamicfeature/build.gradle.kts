@@ -4,8 +4,14 @@ plugins {
 android {
     namespace = "ai.metabind.dynamicfeature"
 
+    // See the note in app/build.gradle.kts — bindjs-android requires compileSdk 36.1.
+    compileSdk {
+        version = release(libs.versions.android.compile.sdk.get().toInt()) {
+            minorApiLevel = 1
+        }
+    }
+
     defaultConfig {
-        compileSdk = libs.versions.android.compile.sdk.get().toInt()
         minSdk = libs.versions.android.min.sdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

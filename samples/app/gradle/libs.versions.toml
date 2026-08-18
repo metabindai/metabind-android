@@ -1,5 +1,8 @@
 [versions]
-agp = "9.0.1"
+# AGP must match the monorepo (and the bindjs-android it composes) exactly — Gradle refuses
+# two AGP versions in one build, and the includeBuild in settings.gradle.kts pulls those in.
+# AGP 9.3.1 also raises the Gradle floor to 9.5, hence the 9.6.1 wrapper.
+agp = "9.3.1"
 android-compile-sdk = "36"
 android-min-sdk = "26"
 android-target-sdk = "36"

@@ -4,7 +4,10 @@
 metabind = "0.2.3"
 
 # Toolchain / SDK
-agp = "9.0.1"
+# AGP has to match `bindjs-android` exactly: Gradle refuses two AGP versions in one
+# build, and the samples compose this build with a local bindjs checkout. AGP 9.3.1
+# also raises the Gradle floor to 9.5, hence the 9.6.1 wrapper.
+agp = "9.3.1"
 kotlin = "2.3.10"
 android-compile-sdk = "36"
 android-min-sdk = "26"

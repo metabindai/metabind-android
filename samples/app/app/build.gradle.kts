@@ -7,9 +7,16 @@ plugins {
 
 android {
 
+    // bindjs-android compiles against 36.1 and requires consumers to do the same, so this
+    // has to be the block form — `defaultConfig.compileSdk` can't express a minor API level.
+    compileSdk {
+        version = release(libs.versions.android.compile.sdk.get().toInt()) {
+            minorApiLevel = 1
+        }
+    }
+
     defaultConfig {
         applicationId = "ai.metabind.app"
-        compileSdk = libs.versions.android.compile.sdk.get().toInt()
         minSdk = libs.versions.android.min.sdk.get().toInt()
         targetSdk = libs.versions.android.target.sdk.get().toInt()
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "9").toInt()

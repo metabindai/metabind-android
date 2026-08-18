@@ -1,6 +1,9 @@
 [versions]
-agp = "9.0.1"
-kotlin = "2.2.10"
+# AGP must match the monorepo and `bindjs-android` exactly — Gradle refuses two AGP
+# versions in one build and this sample composes both. Kotlin tracks the monorepo:
+# bindjs builds with 2.4.10, and a 2.2.x compiler can't read its 2.4.0 metadata.
+agp = "9.3.1"
+kotlin = "2.3.10"
 androidCompileSdk = "36"
 androidMinSdk = "26"
 coreKtx = "1.16.0"

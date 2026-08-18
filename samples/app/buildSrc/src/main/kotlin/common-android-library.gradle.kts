@@ -7,8 +7,14 @@ val vce = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 android {
 
+    // See the note in app/build.gradle.kts — bindjs-android requires compileSdk 36.1.
+    compileSdk {
+        version = release(vce.findVersion("android-compile-sdk").get().requiredVersion.toInt()) {
+            minorApiLevel = 1
+        }
+    }
+
     defaultConfig {
-        compileSdk = vce.findVersion("android-compile-sdk").get().requiredVersion.toInt()
         minSdk = vce.findVersion("android-min-sdk").get().requiredVersion.toInt()
     }
 
