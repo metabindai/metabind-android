@@ -40,8 +40,8 @@ include(":mcpappshost")
 include(":metabindai")
 
 // To develop against a local checkout of BindJS, uncomment and point at ../bindjs-android:
-includeBuild("../bindjs-android") {
-    dependencySubstitution {
-        substitute(module("ai.metabind:bindjs-android")).using(project(":bindjs"))
-    }
-}
+//includeBuild("../bindjs-android") {
+//    dependencySubstitution {
+//        substitute(module("ai.metabind:bindjs-android")).using(project(":bindjs"))
+//    }
+//}
