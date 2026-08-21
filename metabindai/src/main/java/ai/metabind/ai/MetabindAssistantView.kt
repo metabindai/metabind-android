@@ -5,14 +5,6 @@
  */
 package ai.metabind.ai
 
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
-import android.view.ViewGroup
-import android.webkit.JavascriptInterface
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -22,7 +14,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,13 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,30 +51,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import ai.metabind.bindjs.JsRuntimeImpl
-import ai.metabind.bindjs.McpHost
-import ai.metabind.bindjs.composables.BindJSView
-import ai.metabind.bindjs.composables.LocalHostScrollsVertically
-import ai.metabind.bindjs.composables.UiEvent
-import ai.metabind.bindjs.model.BaseComponent
 import com.halilibo.richtext.commonmark.Markdown
 import com.halilibo.richtext.ui.material3.RichText
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * A drop-in conversational AI view powered by [MetabindAssistant].
@@ -96,7 +67,8 @@ import kotlinx.serialization.json.JsonPrimitive
  * Theming follows Material3 defaults from the host app's theme.
  *
  * For custom UI, observe [MetabindAssistant.messages] directly and build your
- * own views around the [ChatMessage] list.
+ * own views around the [ChatMessage] list, mounting [MetabindToolView] for the
+ * tool cards.
  *
  * ```kotlin
  * val assistant = remember {
@@ -192,11 +164,10 @@ fun MetabindAssistantView(
 
             items(messages.asReversed(), key = { it.id }) { message ->
                 MessageBubble(
+                    assistant = assistant,
                     message = message,
                     toolUIContent = toolUIContent[message.id],
                     onSendMessage = sendAndScroll,
-                    onUpdateModelContext = assistant::mergePendingContext,
-                    onCallTool = assistant::callMcpTool,
                 )
             }
 
@@ -281,186 +252,40 @@ private suspend fun LazyListState.smoothScrollToBottom() {
 
 @Composable
 private fun MessageBubble(
+    assistant: MetabindAssistant,
     message: ChatMessage,
     toolUIContent: ToolUIContent? = null,
     onSendMessage: (String) -> Unit = {},
-    onUpdateModelContext: (Map<String, Any?>) -> Unit = {},
-    onCallTool: suspend (String, Map<String, Any?>) -> Any? = { _, _ -> null },
 ) {
     when (message.role) {
         MessageRole.USER -> UserBubble(message)
         MessageRole.ASSISTANT -> AssistantBubble(message)
         MessageRole.ERROR -> ErrorBubble(message)
         MessageRole.TOOL -> {
-            when (toolUIContent) {
-                is ToolUIContent.BindJS -> BindJSToolBubble(
-                    message, toolUIContent, onSendMessage, onUpdateModelContext, onCallTool
-                )
-                is ToolUIContent.Html -> HtmlToolBubble(message, toolUIContent)
-                null -> {}
-            }
-        }
-    }
-}
-
-@Composable
-private fun BindJSToolBubble(
-    message: ChatMessage,
-    content: ToolUIContent.BindJS,
-    onSendMessage: (String) -> Unit,
-    onUpdateModelContext: (Map<String, Any?>) -> Unit,
-    onCallTool: suspend (String, Map<String, Any?>) -> Any?,
-) {
-    val context = LocalContext.current
-    // Each tool bubble gets its own isolate: a shared runtime would let sibling
-    // bubbles overwrite each other's handler table, hook state, rerender
-    // listener and mcpHost — so rendering a new bubble freezes the older ones.
-    val jsRuntime = remember { JsRuntimeImpl.create(context.applicationContext) }
-    DisposableEffect(jsRuntime) {
-        onDispose { jsRuntime.close() }
-    }
-    var renderedComponent by remember { mutableStateOf<BaseComponent<*>?>(null) }
-    var version by remember { mutableIntStateOf(0) }
-    val coroutineScope = rememberCoroutineScope()
-
-    suspend fun rerender() {
-        try {
-            // Atomic willRender + callComponent (see JsRuntime.renderComponent):
-            // splitting the pair lets concurrent re-renders corrupt the shared
-            // JS hook state and handlers stop firing.
-            val next = jsRuntime.renderComponent(
-                content.layoutComponentName,
-                jsonObjectToMap(content.toolArguments),
-            )
-            renderedComponent = next
-            version++
-        } catch (e: Exception) {
-            Log.e("BindJSToolBubble", "rerender failed", e)
-        }
-    }
-
-    LaunchedEffect(content) {
-        try {
-            jsRuntime.setOnRerenderRequested { coroutineScope.launch { rerender() } }
-            jsRuntime.setMcpHost(object : McpHost {
-                override fun openLink(url: String) {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(intent)
-                }
-                override fun sendMessage(message: String) { onSendMessage(message) }
-                override fun updateModelContext(content: Map<String, Any?>) { onUpdateModelContext(content) }
-                override fun log(level: String, message: String) { Log.d("BindJSHost", "[$level] $message") }
-                override suspend fun toolCall(name: String, args: Map<String, Any?>): Any? =
-                    onCallTool(name, args)
-            })
-            jsRuntime.awaitReady()
-            jsRuntime.setComponents(content.designerComponent)
-            jsRuntime.setEnvironment(
-                buildBindJSEnvironment(
+            if (toolUIContent != null) {
+                MetabindToolView(
+                    assistant = assistant,
                     toolName = message.toolName ?: "",
-                    toolArguments = content.toolArguments,
-                    toolResult = content.toolResultText
-                )
-            )
-            renderedComponent = jsRuntime.renderComponent(
-                content.layoutComponentName,
-                jsonObjectToMap(content.toolArguments),
-            )
-            version++
-        } catch (e: Exception) {
-            Log.e("BindJSToolBubble", "Failed to render BindJS component", e)
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
-    ) {
-        val component = renderedComponent
-        if (component != null) {
-            CompositionLocalProvider(LocalHostScrollsVertically provides true) {
-                BindJSView(
-                    jsRuntime = jsRuntime,
-                    component = component,
-                    version = version,
-                    onUiEvent = { event -> handleBindJSEvent(jsRuntime, event) }
-                )
-            }
-        } else if (message.toolStatus == ToolStatus.LOADING) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
+                    content = toolUIContent,
+                    onSendMessage = onSendMessage,
+                    placeholder = {
+                        if (message.toolStatus == ToolStatus.LOADING) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    },
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun HtmlToolBubble(message: ChatMessage, content: ToolUIContent.Html) {
-    val hostedHtml = remember(content.html, content.toolArguments) {
-        buildMcpAppHostHtml(content.html, content.toolArguments)
-    }
-
-    var contentHeight by remember(content.html) { mutableStateOf<Dp?>(null) }
-    val density = LocalDensity.current
-    val bridge = remember {
-        object {
-            @JavascriptInterface
-            fun onSizeChanged(heightCssPx: Int) {
-                if (heightCssPx > 0) contentHeight = with(density) { heightCssPx.toDp() }
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
-    ) {
-        val heightModifier = contentHeight?.let { Modifier.height(it) } ?: Modifier.height(384.dp)
-
-        AndroidView(
-            factory = { ctx ->
-                WebView(ctx).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    settings.loadWithOverviewMode = true
-                    settings.useWideViewPort = true
-                    settings.loadsImagesAutomatically = true
-                    settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                    webViewClient = WebViewClient()
-                    setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                    addJavascriptInterface(bridge, "MBAndroidHost")
-                }
-            },
-            update = { webView ->
-                if (webView.tag != hostedHtml) {
-                    webView.tag = hostedHtml
-                    webView.loadDataWithBaseURL(
-                        "https://localhost/",
-                        hostedHtml,
-                        "text/html",
-                        "UTF-8",
-                        null
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(heightModifier)
-                .clip(RoundedCornerShape(16.dp))
-        )
     }
 }
 
@@ -591,136 +416,5 @@ private fun ChatInputBar(
                 modifier = Modifier.size(24.dp)
             )
         }
-    }
-}
-
-private fun buildMcpAppHostHtml(mcpAppHtml: String, toolArguments: JsonElement?): String {
-    val srcdoc = mcpAppHtml
-        .replace("&", "&amp;")
-        .replace("\"", "&quot;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    val argsJson = toolArguments?.toString() ?: "{}"
-    return """
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-html,body{margin:0;padding:0;height:100%;background:transparent}
-iframe{border:0;width:100%;height:100%;display:block;background:transparent}
-</style></head><body>
-<iframe id="mb-child" srcdoc="$srcdoc"></iframe>
-<script>
-(function(){
-  var iframe = document.getElementById('mb-child');
-  var child = iframe.contentWindow;
-  var toolArgs = $argsJson;
-  var sentToolInput = false;
-
-  window.addEventListener('message', function(ev){
-    var m = ev.data;
-    if (!m || m.jsonrpc !== '2.0') return;
-    if (m.method === 'ui/initialize' && m.id != null) {
-      child.postMessage({
-        jsonrpc:'2.0', id:m.id,
-        result:{
-          hostContext:{ theme:'light' },
-          hostInfo:{ name:'Metabind Android', version:'1.0.0' },
-          hostCapabilities:{},
-          protocolVersion: m.params && m.params.protocolVersion || '2026-01-26'
-        }
-      }, '*');
-      return;
-    }
-    if (m.method === 'ui/notifications/initialized') {
-      if (sentToolInput) return;
-      sentToolInput = true;
-      child.postMessage({
-        jsonrpc:'2.0',
-        method:'ui/notifications/tool-input',
-        params:{ arguments: toolArgs }
-      }, '*');
-      return;
-    }
-    if (m.method === 'ui/notifications/size-changed') {
-      var h = m.params && m.params.height;
-      if (typeof h === 'number' && window.MBAndroidHost && window.MBAndroidHost.onSizeChanged) {
-        window.MBAndroidHost.onSizeChanged(Math.ceil(h));
-      }
-      return;
-    }
-    if (m.id != null && m.method) {
-      child.postMessage({ jsonrpc:'2.0', id:m.id, result:{} }, '*');
-    }
-  });
-})();
-</script></body></html>
-""".trimIndent()
-}
-
-private fun handleBindJSEvent(jsRuntime: ai.metabind.bindjs.JsRuntime, event: UiEvent) {
-    CoroutineScope(Dispatchers.IO).launch {
-        when (event) {
-            is UiEvent.OnTap -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnAppear -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnDisappear -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnChange -> jsRuntime.callEventHandler(
-                event.handlerId,
-                arrayOf(event.oldValue ?: "", event.newValue ?: "")
-            )
-            is UiEvent.OnLongPress -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnSwitch -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.checked))
-            is UiEvent.OnTextChange -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.text))
-            // Coalesced + serialized inside bindjs (latest-wins on the `changed`
-            // phase); re-renders via the setOnRerenderRequested listener.
-            is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)
-            is UiEvent.OnNavigationTap -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnPickerTap -> jsRuntime.callPickerSetter(event.setterId, event.tag)
-            is UiEvent.OnChartSelection -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.value))
-        }
-    }
-}
-
-private fun buildBindJSEnvironment(
-    toolName: String,
-    toolArguments: JsonElement?,
-    toolResult: String?,
-): Map<String, Any> {
-    val env = mutableMapOf<String, Any>("toolName" to toolName)
-    if (toolArguments != null) env["toolArguments"] = jsonElementToAny(toolArguments)
-    if (toolResult != null) env["toolResult"] = toolResult
-    return env
-}
-
-private fun jsonElementToAny(element: JsonElement): Any {
-    return when (element) {
-        is JsonPrimitive -> {
-            if (element.isString) element.content
-            else element.content.toBooleanStrictOrNull()
-                ?: element.content.toLongOrNull()
-                ?: element.content.toDoubleOrNull()
-                ?: element.content
-        }
-        is JsonObject -> element.entries.associate { (k, v) -> k to jsonElementToAny(v) }
-        is JsonArray -> element.map { jsonElementToAny(it) }
-        is JsonNull -> "null"
-    }
-}
-
-private fun jsonObjectToMap(element: JsonElement?): Map<String, Any?> {
-    val obj = element as? JsonObject ?: return emptyMap()
-    return obj.entries.associate { (k, v) -> k to jsonElementToNullableAny(v) }
-}
-
-private fun jsonElementToNullableAny(element: JsonElement): Any? {
-    return when (element) {
-        is JsonNull -> null
-        is JsonPrimitive -> {
-            if (element.isString) element.content
-            else element.content.toBooleanStrictOrNull()
-                ?: element.content.toLongOrNull()
-                ?: element.content.toDoubleOrNull()
-                ?: element.content
-        }
-        is JsonObject -> element.entries.associate { (k, v) -> k to jsonElementToNullableAny(v) }
-        is JsonArray -> element.map { jsonElementToNullableAny(it) }
     }
 }

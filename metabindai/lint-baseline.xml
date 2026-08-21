@@ -7,7 +7,7 @@
         errorLine1="                    addJavascriptInterface(bridge, &quot;MBAndroidHost&quot;)"
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/ai/metabind/ai/MetabindAssistantView.kt"
+            file="src/main/java/ai/metabind/ai/MetabindToolView.kt"
             line="444"
             column="21"/>
     </issue>
@@ -18,7 +18,7 @@
         errorLine1="                    settings.javaScriptEnabled = true"
         errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/ai/metabind/ai/MetabindAssistantView.kt"
+            file="src/main/java/ai/metabind/ai/MetabindToolView.kt"
             line="436"
             column="21"/>
     </issue>

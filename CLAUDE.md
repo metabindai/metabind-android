@@ -12,7 +12,7 @@ library (consumed as a published GitHub Packages dependency, kept in its own rep
 
 - **`:metabind-content`** — Content SDK. Apollo GraphQL client, repository, ViewModels, and Composable entry points (`MetabindView`). Published as `ai.metabind:metabind-content-android`. Namespace/package `ai.metabind.metabind` (unchanged; formerly `:metabind` / `metabind-android`).
 - **`:mcpappshost`** — Low-level MCP tool-rendering building blocks (`MCPAppsClient`). Published as `ai.metabind:mcpappshost-android`. Namespace `ai.metabind.mcpappshost`.
-- **`:metabindai`** — Assistant SDK (`MetabindAssistant`, `MetabindAssistantView`). Published as `ai.metabind:metabindai-android`. Namespace/package `ai.metabind.ai` (formerly `:metabindassistant` / `metabind-assistant-android`, namespace `ai.metabind.assistant`).
+- **`:metabindai`** — Assistant SDK (`MetabindAssistant`, the drop-in `MetabindAssistantView`, and `MetabindToolView` for rendering one tool's MCP App inside a custom surface). Published as `ai.metabind:metabindai-android`. Namespace/package `ai.metabind.ai` (formerly `:metabindassistant` / `metabind-assistant-android`, namespace `ai.metabind.assistant`).
 
 All three publish at one **unified version** defined once in `gradle/libs.versions.toml`
 (`versions.metabind`) and inherited via the root `build.gradle.kts` (group + version +
@@ -22,9 +22,14 @@ The `bindjs` rendering engine is an external dependency (`ai.metabind:bindjs-and
 
 ## Samples
 
-Sample apps live under `samples/` (`app`, `assistant-demo`, `retail`). Each is its own
-Gradle build and, by default, builds against the in-tree SDK sources via
-`includeBuild("../..")` + dependency substitution. `retail` is a stub.
+Sample apps live under `samples/` (`app`, `assistant-demo`, `finance-demo`, `retail`).
+Each is its own Gradle build and, by default, builds against the in-tree SDK sources
+via `includeBuild("../..")` + dependency substitution. `retail` is a stub.
+
+- **`assistant-demo`** — the drop-in `MetabindAssistantView` chat surface.
+- **`finance-demo`** — a custom two-surface app (home answer + thread sheet) over the
+  same `MetabindAssistant`, rendering tool cards through the public
+  `MetabindToolView`. Counterpart to `metabind-apple`'s `Samples/MetabindAI/FinanceDemo`.
 
 ## Build Commands
 
@@ -37,6 +42,7 @@ Gradle build and, by default, builds against the in-tree SDK sources via
 # Samples are separate composite builds:
 cd samples/app            && ./gradlew :app:assembleDebug
 cd samples/assistant-demo && ./gradlew :app:assembleDebug
+cd samples/finance-demo   && ./gradlew :app:assembleDebug
 ```
 
 **GitHub Packages auth** — requires `gpr.user`/`gpr.key` Gradle properties or `GITHUB_ACTOR`/`GITHUB_TOKEN` env vars. This is needed both for publishing and for resolving the `bindjs` dependency.

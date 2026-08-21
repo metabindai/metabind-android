@@ -269,8 +269,29 @@ class MetabindAssistant(
         _error.value = null
     }
 
-    internal fun mergePendingContext(content: Map<String, Any?>) {
+    /**
+     * Merge structured context into the prefix the model sees on the next [send].
+     *
+     * Rendered components call `host.updateModelContext({…})` to hand the model
+     * selection or view state it should know about next turn; that lands here.
+     * A custom surface can also call it directly — e.g. to name which of several
+     * on-screen answers the user is looking at, so a follow-up phrased as "that"
+     * resolves against the right one instead of the most recent turn.
+     *
+     * The merged map is consumed by the next [send] as a `<context>…</context>`
+     * prefix visible only to the model, never in the user-facing [ChatMessage].
+     */
+    fun mergePendingContext(content: Map<String, Any?>) {
         for ((key, value) in content) pendingContext[key] = anyToJsonElement(value)
+    }
+
+    /**
+     * Drop context merged by [mergePendingContext] before it reaches the model.
+     * Call when the turn it was gathered for is abandoned, so it doesn't attach
+     * itself to an unrelated question later.
+     */
+    fun clearPendingContext() {
+        pendingContext.clear()
     }
 
     internal suspend fun callMcpTool(name: String, args: Map<String, Any?>): Any? {

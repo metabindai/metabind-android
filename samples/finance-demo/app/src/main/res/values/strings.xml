@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Metabind Finance</string>
+
+    <string name="key_entry_title">Enter your Metabind API key</string>
+    <string name="key_entry_subtitle">Routed through the Metabind Agent proxy — no provider keys in the app.</string>
+    <string name="key_entry_placeholder">mb_…</string>
+    <string name="key_entry_start">Start</string>
+
+    <string name="home_title">Metabind Finance</string>
+    <string name="menu_more">More</string>
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_debug">Debug</string>
+    <string name="menu_reset_api_key">Reset API Key</string>
+
+    <string name="ask_anything">Ask anything</string>
+    <string name="ask_placeholder">Ask about your money</string>
+    <string name="ask_send">Send</string>
+    <string name="ask_cancel">Stop</string>
+
+    <string name="answer_close">Close</string>
+    <string name="answer_empty">Nothing came back for that one.</string>
+    <string name="answer_retry">Try again</string>
+</resources>

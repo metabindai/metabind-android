@@ -1,0 +1,20 @@
+# Copy to local.properties (same directory) and fill in your own values.
+# local.properties is gitignored — it never gets committed, so this is the safe
+# place for real project identity values.
+#
+# FINANCE_DEMO_API_KEY is optional. If set, it is compiled into BuildConfig and is
+# recoverable from the built APK; use only a restricted, revocable demo key. Leave
+# it out to enter a key at runtime instead.
+#
+# Every value can also come from an environment variable of the same name, which is
+# what CI should do.
+
+sdk.dir=/Users/you/Library/Android/sdk
+
+FINANCE_DEMO_ORG_ID=your_stable_internal_org_id
+FINANCE_DEMO_PROJECT_ID=your_project_id
+FINANCE_DEMO_API_KEY=
+
+# Optional overrides for non-production endpoints.
+#FINANCE_DEMO_AGENT_HOST=https://agent.metabind.ai
+#FINANCE_DEMO_MCP_HOST=https://mcp.metabind.ai
