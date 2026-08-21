@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -48,6 +50,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -55,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /**
@@ -69,13 +74,29 @@ import kotlinx.coroutines.launch
  * Only the question is pinned. The answer's prose and its card scroll under the
  * header, passing through a fade rather than being cut off at an edge.
  *
- * Full height rather than iOS's medium/large detents. Material's partially-expanded
- * state translates the whole content down, so anything bottom-aligned inside it —
- * the ask bar — ends up below the screen; iOS pins that bar with a `safeAreaInset`
- * that tracks the detent, and Compose has no equivalent. Keeping one height keeps
- * the bar reachable, which matters more here than the glimpse of the home card a
- * half sheet would leave. Swiping down still dismisses, and dismissing still ends
- * the thread.
+ * Two detents, like iOS: it opens half-height so the home answer stays visible
+ * behind it, and expands to just short of full screen — the status bar and a little
+ * more stay clear, so the sheet reads as a card over the app rather than as a new
+ * screen. Swiping down dismisses, and dismissing ends the thread.
+ *
+ * Material has no equivalent of iOS's `safeAreaInset`, which pins the ask bar to the
+ * bottom of the sheet at whatever detent it sits at. Material's partially-expanded
+ * state translates the whole sheet down instead, so a bottom-aligned child lands
+ * below the screen. Two things make up for it:
+ *
+ *  - The content is given an explicit height — window minus [ExpandedTopInset] —
+ *    rather than filling. The Expanded anchor is `window - sheet height`, so sizing
+ *    the sheet short is what leaves the gap at the top. It also keeps the
+ *    partially-expanded anchor alive, which Material only offers while the sheet is
+ *    taller than half the window.
+ *  - The ask bar is translated up by however much of the sheet currently hangs below
+ *    the screen (`offset - topInset`), which holds it on the bottom edge in every
+ *    state and all the way through a drag. A `graphicsLayer` lambda rather than a
+ *    padding: dragging then re-runs one layer block instead of re-measuring the card.
+ *
+ * The answer itself is deliberately *not* shortened to match — half-open, its tail
+ * hangs below the screen. Dragging it up expands the sheet first (Material's sheet
+ * nested-scroll connection), so the tail arrives exactly when you reach for it.
  *
  * (iOS also lets a component push the sheet to `large` through the host bridge's
  * display-mode handler. bindjs on Android has no display-mode channel, so that
@@ -86,8 +107,11 @@ import kotlinx.coroutines.launch
 fun AnswerSheet(router: AnswerRouter) {
     val colors = palette
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState()
     val density = LocalDensity.current
+
+    val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val topInsetPx = with(density) { (statusBar + ExpandedTopInset).toPx() }
 
     var headerHeight by remember { mutableStateOf(0.dp) }
     var barHeight by remember { mutableStateOf(0.dp) }
@@ -114,8 +138,29 @@ fun AnswerSheet(router: AnswerRouter) {
         sheetState = sheetState,
         containerColor = colors.page,
         contentColor = colors.textPrimary,
+        // Zeroed so the height this content is handed is the plain window height,
+        // with nothing subtracted that moves as the sheet is dragged (Material feeds
+        // the sheet's own offset back in as a consumed top inset). The top is covered
+        // by `topInset` above; the bottom is [QuestionBar]'s to apply, and it already
+        // does — it needs the inset on the pills alone, not on the scrim behind them.
+        contentWindowInsets = { WindowInsets(0) },
     ) {
-        Box(modifier = Modifier.fillMaxHeight()) {
+        // Sizing the sheet short of the window is what leaves the gap above it when
+        // expanded. The incoming max height is the window's, already net of the drag
+        // handle above — hence a layout modifier rather than a `fillMaxHeight` and a
+        // guess at what the handle costs.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .layout { measurable, constraints ->
+                    val height =
+                        (constraints.maxHeight - topInsetPx.roundToInt()).coerceAtLeast(0)
+                    val placeable = measurable.measure(
+                        constraints.copy(minHeight = height, maxHeight = height)
+                    )
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                }
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -167,6 +212,15 @@ fun AnswerSheet(router: AnswerRouter) {
                 pending = router.pending?.question,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    // Rides up over whatever part of the sheet is off the bottom of
+                    // the screen, so the bar sits on the screen's edge at both
+                    // detents and everywhere in between. Read inside the layer block:
+                    // a drag then re-runs this and nothing else.
+                    .graphicsLayer {
+                        val offset = runCatching { sheetState.requireOffset() }
+                            .getOrDefault(topInsetPx)
+                        translationY = -(offset - topInsetPx).coerceAtLeast(0f)
+                    }
                     .onSizeChanged { barHeight = with(density) { it.height.toDp() } },
             )
         }
@@ -353,3 +407,11 @@ private fun ThreadChips(
 }
 
 private val ChipFadeWidth = 26.dp
+
+/**
+ * Clearance kept below the status bar when the sheet is fully expanded, on top of
+ * the status bar's own height. iOS's large detent leaves about this much, and the
+ * point of it is the same: a strip of the screen underneath stays visible, so the
+ * sheet never reads as having replaced it.
+ */
+private val ExpandedTopInset = 12.dp

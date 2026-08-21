@@ -153,6 +153,16 @@ verbatim.
   measured height. Its window-insets padding goes on the *content* of the bar rather
   than the whole bar, so the scrim still runs the full height and finishes under the
   navigation bar instead of at a visible edge.
+- **The answer sheet's two detents are hand-fitted.** Material gives the sheet an
+  explicit height (`window - status bar - 12dp`) rather than letting it fill, because
+  the Expanded anchor is `window - sheet height` — sizing it short is what leaves the
+  gap at the top, and it also keeps the partially-expanded anchor alive, which
+  Material only offers while the sheet is taller than half the window. Material then
+  translates the whole sheet down for the partial state, so the ask bar is pushed back
+  up by `requireOffset() - topInset` in a `graphicsLayer` block to hold the screen's
+  bottom edge at every offset. The scrolling answer is *not* shortened to match: its
+  tail hangs below the screen while half-open, and dragging it up expands the sheet
+  first (the sheet's nested-scroll connection) so the tail arrives when reached for.
 - **`Modifier.blur` is a no-op below API 31.** The prose reveal degrades to a
   staggered fade and the sweep border loses its glow; both still read fine.
 - **The sweep gradient rotates by moving its stops.** Compose has no rotatable sweep
@@ -163,11 +173,9 @@ verbatim.
 
 ## Divergences from the Apple app (deliberate)
 
-- **One sheet height.** Material's partially-expanded state translates the content
-  down, so a bottom-aligned ask bar ends up off-screen; iOS pins it with a
-  `safeAreaInset` that tracks the detent. Keeping one full height keeps the bar
-  reachable. `requestFullscreen` therefore has no purpose and no trigger — bindjs on
-  Android has no display-mode channel either way.
+- **No `requestFullscreen`.** The sheet has iOS's two detents, but nothing can ask it
+  to change one: bindjs on Android has no display-mode channel, so the request has
+  nowhere to arrive from.
 - **No "Reset Cache".** The Android assistant re-reads each tool's `ui://` resource
   per call, so there is nothing cached to drop.
 - **DataStore, not Keychain.** Uninstalling clears the key; there is no
