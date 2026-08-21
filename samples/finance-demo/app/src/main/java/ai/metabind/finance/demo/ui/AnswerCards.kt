@@ -219,9 +219,14 @@ fun LoadingCard(modifier: Modifier = Modifier) {
         label = "shimmerAlpha",
     )
 
-    AnswerCard(modifier = modifier.alpha(shimmer)) {
+    // The pulse goes on the card's *contents*, not the card. An alpha layer wrapping
+    // AnswerCard forces its shadow to composite offscreen, which loses the rounded
+    // outline and leaves a square shadow poking out of all four corners.
+    AnswerCard(modifier = modifier) {
         Column(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier
+                .alpha(shimmer)
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             SkeletonBar(widthFraction = 0.5f, color = colors.fill)

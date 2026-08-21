@@ -6,6 +6,7 @@
 package ai.metabind.finance.demo.ui
 
 import ai.metabind.finance.demo.ui.theme.Accent
+import android.os.Build
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -52,15 +53,21 @@ import androidx.compose.ui.unit.dp
  * still growing into place; off it fades fast, so it's gone almost as the bubble
  * starts shrinking back rather than popping.
  *
- * Below API 31 `Modifier.blur` is a no-op, so the glow layer collapses onto the
- * crisp arc — the sweep still reads, just without the bloom.
+ * The arc is drawn as a stack of strokes on one shared centreline: two wide, faint,
+ * heavily blurred passes for bloom, then a thin core blurred by well under its own
+ * width so it has no hard pixel edge on either side. Widening a stroke moves its
+ * centre when the inset is derived from its own width, which would bias the bloom
+ * inward, so every layer insets by half the *core* width instead.
+ *
+ * Below API 31 `Modifier.blur` is a no-op, which would land the bloom passes as
+ * extra hard-edged strokes rather than glow. There the core is drawn alone.
  */
 @Composable
 fun AISweepBorder(
     cornerRadius: Dp,
     active: Boolean,
     modifier: Modifier = Modifier,
-    lineWidth: Dp = 4.6.dp,
+    lineWidth: Dp = 2.dp,
     periodMillis: Int = 2200,
     appearDelayMillis: Int = 400,
 ) {
@@ -94,43 +101,97 @@ fun AISweepBorder(
         label = "sweepTurn",
     )
 
-    Box(modifier = modifier.alpha(opacity)) {
-        // The blurred copy under the crisp arc, for glow.
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(6.dp, BlurredEdgeTreatment.Unbounded)
-        ) {
-            drawSweep(turn, cornerRadius.toPx(), lineWidth.toPx(), drawRing = false)
+    val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    // Nothing to draw while it's off, and the lap animation keeps running regardless,
+    // so this skips three blurred layers redrawing every frame behind a zero alpha.
+    if (opacity <= 0.001f) return
+
+    Box(modifier = modifier) {
+        if (canBlur) {
+            // Two bloom passes rather than one: a wide, faint halo for the ambient
+            // light, and a tighter, stronger one so the arc still has a locatable
+            // bright head as it travels.
+            SweepLayer(turn, cornerRadius, lineWidth, lineWidth * 3f, 12.dp, 0.3f * opacity, false)
+            SweepLayer(turn, cornerRadius, lineWidth, lineWidth * 1.6f, 4.dp, 0.45f * opacity, false)
         }
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawSweep(turn, cornerRadius.toPx(), lineWidth.toPx(), drawRing = true)
-        }
+        SweepLayer(
+            turn = turn,
+            cornerRadius = cornerRadius,
+            coreWidth = lineWidth,
+            strokeWidth = lineWidth,
+            blurRadius = if (canBlur) 1.dp else 0.dp,
+            layerAlpha = 0.8f * opacity,
+            ring = true,
+        )
+    }
+}
+
+/**
+ * One stroke of the stack.
+ *
+ * The alpha is folded into the paint rather than applied with `Modifier.alpha`.
+ * An alpha layer has to composite offscreen into a buffer the size of its own
+ * bounds, and a blurred child's bloom reaches past those bounds — so wrapping this
+ * in one clips the glow to the layout rect and draws a hard-cornered rectangle
+ * around the bubble.
+ */
+@Composable
+private fun SweepLayer(
+    turn: Float,
+    cornerRadius: Dp,
+    coreWidth: Dp,
+    strokeWidth: Dp,
+    blurRadius: Dp,
+    layerAlpha: Float,
+    ring: Boolean,
+) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(
+                if (blurRadius > 0.dp) {
+                    Modifier.blur(blurRadius, BlurredEdgeTreatment.Unbounded)
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        drawSweep(
+            turn = turn,
+            cornerRadiusPx = cornerRadius.toPx(),
+            insetPx = coreWidth.toPx() / 2f,
+            strokePx = strokeWidth.toPx(),
+            alpha = layerAlpha,
+            drawRing = ring,
+        )
     }
 }
 
 private fun DrawScope.drawSweep(
     turn: Float,
     cornerRadiusPx: Float,
+    insetPx: Float,
     strokePx: Float,
+    alpha: Float,
     drawRing: Boolean,
 ) {
-    val inset = strokePx / 2f
-    val topLeft = Offset(inset, inset)
+    val topLeft = Offset(insetPx, insetPx)
     val strokedSize = Size(
-        width = (size.width - strokePx).coerceAtLeast(0f),
-        height = (size.height - strokePx).coerceAtLeast(0f),
+        width = (size.width - insetPx * 2f).coerceAtLeast(0f),
+        height = (size.height - insetPx * 2f).coerceAtLeast(0f),
     )
-    val radius = CornerRadius((cornerRadiusPx - inset).coerceAtLeast(0f))
+    val radius = CornerRadius((cornerRadiusPx - insetPx).coerceAtLeast(0f))
 
     if (drawRing) {
         // A faint full ring so the edge reads as lit all the way round, not just
         // where the bright arc happens to be.
         drawRoundRect(
-            color = Accent.copy(alpha = 0.18f),
+            color = Accent.copy(alpha = 0.14f),
             topLeft = topLeft,
             size = strokedSize,
             cornerRadius = radius,
+            alpha = alpha,
             style = Stroke(width = strokePx),
         )
     }
@@ -143,6 +204,7 @@ private fun DrawScope.drawSweep(
         topLeft = topLeft,
         size = strokedSize,
         cornerRadius = radius,
+        alpha = alpha,
         style = Stroke(width = strokePx),
     )
 }

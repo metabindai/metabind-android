@@ -1,14 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  finance-demo launcher mark: an ascending bar chart with a pie chart resting on
+  the tallest bar. Drawn in the 108dp adaptive-icon viewport, content kept inside
+  a centered 62 x 50 box so the launcher masks never clip it.
+
+  The bars are one stroked path (round caps == the rounded bar ends) sharing a
+  single vertical gradient, so the tallest bar reads lightest. The pie is three
+  stacked shapes: a black disc that acts as the separating ring against the bars,
+  the white disc, then the green slice.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
-    <group
-        android:translateX="0"
-        android:translateY="0">
-        <path
-            android:fillColor="#000000"
-            android:pathData="M254.108,80.974C255.355,80.704 256.645,80.704 257.892,80.974C259.302,81.279 260.626,82.058 263.276,83.618L398.819,163.384C401.469,164.944 402.795,165.725 403.759,166.816C404.61,167.781 405.257,168.915 405.651,170.149C406.096,171.545 406.095,173.113 406.095,176.233V335.766C406.095,338.884 406.096,340.446 405.651,341.843C405.257,343.077 404.61,344.21 403.759,345.174C402.795,346.266 401.468,347.047 398.819,348.607L263.276,428.373C260.625,429.933 259.302,430.721 257.892,431.026C256.645,431.296 255.355,431.296 254.108,431.026C252.699,430.721 251.376,429.932 248.725,428.373L113.181,348.607C110.533,347.047 109.206,346.266 108.242,345.174C107.391,344.21 106.744,343.076 106.35,341.843C105.905,340.446 105.906,338.884 105.906,335.766V176.233C105.906,173.113 105.905,171.545 106.35,170.149C106.744,168.915 107.391,167.781 108.242,166.816C109.206,165.725 110.532,164.943 113.181,163.384L248.725,83.618C251.375,82.058 252.7,81.279 254.108,80.974ZM255.991,185.325C217.706,185.326 186.667,216.966 186.665,255.991C186.665,295.018 217.705,326.655 255.991,326.657C294.279,326.657 325.318,295.018 325.318,255.991C325.316,216.965 294.278,185.325 255.991,185.325Z"
-            android:fillType="evenOdd" />
-    </group>
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M28.17,61.53 L28.17,71.13 M41.22,49.75 L41.22,71.13 M53.91,42.49 L53.91,71.13 M66.6,33.96 L66.6,71.13"
+        android:strokeWidth="10.34"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="28.79"
+                android:endX="0"
+                android:endY="78"
+                android:startColor="#97E8A2"
+                android:endColor="#3FA349" />
+        </aapt:attr>
+    </path>
+
+    <path
+        android:fillColor="#000000"
+        android:pathData="M53.1,63.25 A15.95,15.95 0 1 1 85,63.25 A15.95,15.95 0 1 1 53.1,63.25 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54.91,63.25 A14.14,14.14 0 1 1 83.19,63.25 A14.14,14.14 0 1 1 54.91,63.25 Z" />
+
+    <path
+        android:fillColor="#56B75E"
+        android:pathData="M69.05,63.25 L69.05,49.11 A14.14,14.14 0 0 1 82.98,65.71 Z" />
 </vector>

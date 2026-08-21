@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Themed-icon variant. The system tints every opaque pixel one flat color, so the
+  slice/ring contrast of the full-color mark would collapse into a blob. This is
+  the silhouette instead: the tallest bar is cut short above the pie so the disc
+  still reads as a separate shape.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M28.17,61.53 L28.17,71.13 M41.22,49.75 L41.22,71.13 M53.91,42.49 L53.91,71.13 M66.6,33.96 L66.6,41"
+        android:strokeColor="#000000"
+        android:strokeWidth="10.34"
+        android:strokeLineCap="round" />
+
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54.91,63.25 A14.14,14.14 0 1 1 83.19,63.25 A14.14,14.14 0 1 1 54.91,63.25 Z" />
+</vector>
