@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -79,6 +80,20 @@ class MetabindAssistant(
     private var initJob: Job? = null
     private var streamJob: Job? = null
 
+    /**
+     * The `ui://` resource reads started by the turn currently streaming.
+     *
+     * Each one is launched detached at `ToolCallStart` so the stream keeps moving,
+     * but [isLoading] must not drop while one is outstanding: the read is what puts
+     * a card into [toolUIContent], and a consumer that reads "not loading" as "the
+     * turn is complete" would otherwise conclude a card-bearing turn produced no
+     * card — and nothing would tell it otherwise once the read returned.
+     *
+     * Touched from the stream coroutine on IO and from [cancel] on main, hence the
+     * lock.
+     */
+    private val uiContentJobs = mutableListOf<Job>()
+
     init {
         initJob = scope.launch(Dispatchers.IO) { initMCPClient() }
     }
@@ -126,6 +141,10 @@ class MetabindAssistant(
                     content = message
                 )
             } finally {
+                // Wait out the card reads this turn started, so dropping the flag
+                // means the turn is fully materialized. `cancel` takes and cancels
+                // those same jobs, so an abandoned turn finds nothing to wait on.
+                takeUIContentJobs().joinAll()
                 _isLoading.value = false
             }
         }
@@ -135,6 +154,9 @@ class MetabindAssistant(
     fun cancel() {
         streamJob?.cancel()
         streamJob = null
+        // Outstanding card reads belong to the turn being abandoned. Left running
+        // they would land in `toolUIContent` after a `reset` had emptied it.
+        takeUIContentJobs().forEach { it.cancel() }
         _isLoading.value = false
     }
 
@@ -238,7 +260,7 @@ class MetabindAssistant(
         resourceUri: String,
         toolArguments: JsonElement?,
     ) {
-        scope.launch(Dispatchers.IO) {
+        val job = scope.launch(Dispatchers.IO) {
             try {
                 val client = mcpClient ?: return@launch
                 val resource = client.readResource(resourceUri)
@@ -249,6 +271,15 @@ class MetabindAssistant(
                 Log.e(TAG, "Failed to fetch UI content for $toolName", e)
             }
         }
+        trackUIContentJob(job)
+    }
+
+    private fun trackUIContentJob(job: Job) {
+        synchronized(uiContentJobs) { uiContentJobs.add(job) }
+    }
+
+    private fun takeUIContentJobs(): List<Job> = synchronized(uiContentJobs) {
+        uiContentJobs.toList().also { uiContentJobs.clear() }
     }
 
     private fun updateAssistantMessage(id: String, text: String) {
