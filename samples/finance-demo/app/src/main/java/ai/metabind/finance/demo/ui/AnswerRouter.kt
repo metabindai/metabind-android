@@ -380,6 +380,15 @@ class AnswerRouter(
      * Keeps the in-flight answer and the one that just landed in step with the
      * stream. Everything older is already snapshotted and never read from the
      * conversation again, so an [endThread] can't hollow it out.
+     *
+     * The live answer stays live until something actually invalidates it — the next
+     * [deliver] renames it, [endThread] drops it before resetting the conversation.
+     * It is deliberately *not* retired when the assistant stops: a delivered answer
+     * can still be waiting on a card, and a router that stopped listening at
+     * `isLoading == false` would leave the card sitting in `toolUIContent` unclaimed
+     * and show prose over an empty space. Refreshing past the end of the turn is
+     * safe because [prose] and [renderedCards] both stop at the next question, so a
+     * later turn can't bleed into an earlier answer.
      */
     private fun refreshLive() {
         pending?.let { pending = it.copy(prose = prose(it.startIndex)) }
@@ -390,7 +399,6 @@ class AnswerRouter(
         if (index >= 0) {
             thread = thread.toMutableList().also { it[index] = it[index].refreshed() }
         }
-        if (!isProcessing) liveAnswerId = null
     }
 
     /**
