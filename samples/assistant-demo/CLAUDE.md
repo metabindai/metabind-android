@@ -196,7 +196,7 @@ The OnAppear → `UiEvent.OnAppear(handlerId)` → `MetabindToolView.handleBindJ
 - Jetpack DataStore (Preferences) 1.1.1
 - `kotlinx.serialization` 1.8.1
 - `com.halilibo.compose-richtext:richtext-commonmark + richtext-ui-material3` 1.0.0-alpha01 (assistant markdown rendering)
-- `ai.metabind:metabindai-android` (unified `versions.metabindAssistant`, currently 0.2.5; substituted to the in-tree `:metabindai` module via `includeBuild("../..")` — see chain above, so the pinned version only matters for a standalone build)
+- `ai.metabind:metabindai-android` (unified `versions.metabindAssistant`; substituted to the in-tree `:metabindai` module via `includeBuild("../..")` — see chain above, so the pinned version only matters for a standalone build)
 - BindJS uses `androidx.javascriptengine.JavaScriptSandbox` + `JavaScriptIsolate` for the JS runtime. Requires WebView JavaScript Sandbox to be available on the device.
 
 ## Build / run
