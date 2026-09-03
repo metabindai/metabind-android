@@ -17,7 +17,7 @@ hilt = "2.59.2"
 ksp = "2.3.6"
 kotlinxSerializationJson = "1.8.1"
 datastore = "1.1.1"
-metabindAssistant = "0.2.7"
+metabindAssistant = "0.2.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

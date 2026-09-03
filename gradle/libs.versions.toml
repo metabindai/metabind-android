@@ -1,7 +1,7 @@
 [versions]
 # Unified version for all published Metabind libraries
 # (metabind-content-android, mcpappshost-android, metabindai-android).
-metabind = "0.2.7"
+metabind = "0.2.9"
 
 # Toolchain / SDK
 # AGP has to match `bindjs-android` exactly: Gradle refuses two AGP versions in one
@@ -24,7 +24,7 @@ apollo = "4.4.1"
 lifecycleViewmodelCompose = "2.9.1"
 
 # BindJS (published GitHub Packages artifact, kept separate)
-bindjs = "0.0.27"
+bindjs = "0.0.30"
 
 # AI SDK (:mcpappshost, :metabindai)
 okhttp = "4.12.0"
