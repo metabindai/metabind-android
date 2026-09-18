@@ -67,9 +67,6 @@ android {
     }
 }
 
-configurations.all {
-    exclude(group = "com.atlassian.commonmark", module = "commonmark")
-}
 
 dependencies {
     implementation(libs.metabind.assistant)

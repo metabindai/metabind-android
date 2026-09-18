@@ -14,6 +14,7 @@ import ai.metabind.bindjs.DesignerComponent
 import ai.metabind.bindjs.JsRuntime
 import ai.metabind.bindjs.JsRuntimeImpl
 import ai.metabind.bindjs.composables.UiEvent
+import ai.metabind.bindjs.composables.routeUiEvent
 import ai.metabind.bindjs.model.BaseComponent
 import ai.metabind.metabind.ComponentRepository
 import ai.metabind.metabind.PreviewComponent
@@ -95,25 +96,26 @@ class MetabindViewModel(
         )
     }
 
+    /**
+     * Navigation is ours — a tap has to push the component the handler returns as a new
+     * screen, which is what bindjs leaves to the host. Everything else goes to bindjs's
+     * own router: the dispatch is not obvious (a drag must not be followed by an explicit
+     * render, and the events carrying a value have to forward it), and a `when` of our own
+     * silently falls behind every event bindjs adds.
+     */
     fun onUiEvent(event: UiEvent) {
-        when (event) {
-            is UiEvent.OnAppear -> callEventHandler(event.handlerId)
-            is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
-            is UiEvent.OnChange -> callEventHandler(
-                event.handlerId,
-                arrayOf(event.oldValue ?: "", event.newValue ?: "")
-            )
-            is UiEvent.OnTap -> callEventHandler(event.handlerId)
-            is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            // Drags are coalesced + serialized inside bindjs (latest-wins on the
-            // `changed` phase) and drive their own re-render via the listener set
-            // in loadContent, so don't queue an explicit handler+render per event.
-            is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)
-            is UiEvent.OnPickerTap -> callPickerSetter(event.setterId, event.tag)
-            is UiEvent.OnNavigationTap -> onNavigationTap(event.handlerId)
-            is UiEvent.OnSwitch -> callEventHandler(event.handlerId, arrayOf(event.checked))
-            is UiEvent.OnTextChange -> callEventHandler(event.handlerId, arrayOf(event.text))
-            is UiEvent.OnChartSelection -> callEventHandler(event.handlerId, arrayOf(event.value))
+        if (event is UiEvent.OnNavigationTap) {
+            onNavigationTap(event.handlerId)
+            return
+        }
+        val state = _uiState.value as? UiState.Success ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            jsRuntime.routeUiEvent(event) {
+                _uiState.value = state.copy(
+                    component = renderComponent(state.componentName, state.isContent),
+                    componentVersion = state.componentVersion + 1,
+                )
+            }
         }
     }
 
@@ -126,34 +128,6 @@ class MetabindViewModel(
                         componentVersion = state.componentVersion + 1
                     )
                 }
-            }
-        }
-    }
-
-    private fun callPickerSetter(setterId: String, value: String) {
-        (_uiState.value as? UiState.Success)?.let { state ->
-            viewModelScope.launch(Dispatchers.IO) {
-                Log.d(TAG, "Call callPickerSetter. $setterId $value")
-                jsRuntime.callPickerSetter(setterId, value)
-                val component = renderComponent(state.componentName, state.isContent)
-                _uiState.value = state.copy(
-                    component = component,
-                    componentVersion = state.componentVersion + 1
-                )
-            }
-        }
-    }
-
-    private fun callEventHandler(handlerId: String, data: Array<Any?> = emptyArray()) {
-        (_uiState.value as? UiState.Success)?.let { state ->
-            viewModelScope.launch(Dispatchers.IO) {
-                Log.d(TAG, "Call eventHandler. $handlerId")
-                jsRuntime.callEventHandler(handlerId, data)
-                val component = renderComponent(state.componentName, state.isContent)
-                _uiState.value = state.copy(
-                    component = component,
-                    componentVersion = state.componentVersion + 1
-                )
             }
         }
     }

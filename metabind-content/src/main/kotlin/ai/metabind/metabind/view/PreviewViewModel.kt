@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import ai.metabind.bindjs.JsRuntime
 import ai.metabind.bindjs.JsRuntimeImpl
 import ai.metabind.bindjs.composables.UiEvent
+import ai.metabind.bindjs.composables.routeUiEvent
 import ai.metabind.bindjs.model.BaseComponent
 import ai.metabind.metabind.ComponentRepository
 import ai.metabind.metabind.PreviewComponent
@@ -74,29 +75,20 @@ class PreviewViewModel(
         )
     }
 
+    /**
+     * Hands the event to bindjs's own router. This used to be a `when` with an
+     * `else -> {}`, which silently dropped everything it had not been taught — a switch,
+     * a text field, a picker, a chart or list selection did nothing in a preview while
+     * working everywhere else, and the branch meant no compiler error ever said so.
+     */
     fun onUiEvent(event: UiEvent) {
-        when (event) {
-            is UiEvent.OnAppear -> callEventHandler(event.handlerId)
-            is UiEvent.OnDisappear -> callEventHandler(event.handlerId)
-            is UiEvent.OnTap -> callEventHandler(event.handlerId)
-            is UiEvent.OnLongPress -> callEventHandler(event.handlerId)
-            // Drags are coalesced + serialized inside bindjs (latest-wins on the
-            // `changed` phase) and drive their own re-render via the listener set
-            // in loadContent, so don't queue an explicit handler+render per event.
-            is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)
-            else -> {}
-        }
-    }
-
-    private fun callEventHandler(handlerId: String, data: Array<Any?> = emptyArray()) {
-        (_uiState.value as? UiState.Success)?.let { state ->
-            viewModelScope.launch(Dispatchers.IO) {
-                Log.d(TAG, "Call eventHandler. $handlerId")
-                jsRuntime.callEventHandler(handlerId, data)
-                val component = jsRuntime.renderComponent(state.componentName)
+        val state = _uiState.value as? UiState.Success ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d(TAG, "Route UI event. $event")
+            jsRuntime.routeUiEvent(event) {
                 _uiState.value = state.copy(
-                    component = component,
-                    componentVersion = state.componentVersion + 1
+                    component = jsRuntime.renderComponent(state.componentName),
+                    componentVersion = state.componentVersion + 1,
                 )
             }
         }

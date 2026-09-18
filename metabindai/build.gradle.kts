@@ -71,9 +71,6 @@ publishing {
     }
 }
 
-configurations.all {
-    exclude(group = "com.atlassian.commonmark", module = "commonmark")
-}
 
 dependencies {
     api(project(":mcpappshost"))
