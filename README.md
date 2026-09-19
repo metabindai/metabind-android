@@ -134,7 +134,20 @@ The assistant derives the MCP server URL from your org and project ids; the opti
 > [!NOTE]
 > Retain the `MetabindAssistant` instance at an appropriate scope — inside a ViewModel, for example — and call `close()` when you discard it. The Android SDK is Agent-proxy only: there's no bring-your-own-key provider, so no LLM credential ever ships in your APK.
 
-One Metabind API key authenticates both the MCP server and the agent proxy.
+A supplied Metabind API key authenticates both the MCP server and the agent proxy.
+
+### Public chat and account tokens
+
+For a public published project, omit `apiKey` when constructing
+`MetabindAssistant`. No Authorization header is sent; the Agent receives a random
+private guest-session identifier. Guest chat requires the matching Agent deployment.
+Draft and private access still requires credentials.
+
+For account sign-in, supply `accessTokenProvider = { ... }`, a suspend callback
+that returns a fresh access token. Both MCP requests and Agent turns resolve it
+when needed. The host app owns browser login, encrypted storage, and refresh.
+Anonymous drafts are rejected before network access. Never put tokens or guest
+session identifiers in shared project URLs.
 
 ## MCPAppsHost: render a single tool result
 

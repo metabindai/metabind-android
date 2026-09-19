@@ -17,6 +17,7 @@ class DraftPreviewTest {
     private val main = newSingleThreadContext("preview-test")
     private val server = MockWebServer()
     private val requests = CopyOnWriteArrayList<Pair<String, JsonObject>>()
+    private val authorizationHeaders = CopyOnWriteArrayList<String>()
     @Volatile private var html = "<p>First draft</p>"
     @Volatile private var resourceUri = "ui://card"
     @Volatile private var resourceDelay = 0L
@@ -26,6 +27,7 @@ class DraftPreviewTest {
         Dispatchers.setMain(main)
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
+                authorizationHeaders.add(request.getHeader("Authorization") ?: "")
                 val body = Json.parseToJsonElement(request.body.readUtf8()).jsonObject
                 requests.add(request.path!! to body)
                 if (request.path!!.endsWith("/chat")) {
@@ -92,6 +94,34 @@ class DraftPreviewTest {
         val count = requests.size
         chat.refreshPreviewResources()
         assertEquals(count, requests.size)
+    }
+
+    @Test fun guestAssistantDiscoversToolsAndLoadsCardsWithoutCredentials() = runBlocking(main) {
+        val host = server.url("/").toString().trimEnd('/')
+        val chat = MetabindAssistant(orgId = "org", projectId = "project", agentHost = host, mcpHost = host)
+        assistant = chat
+        chat.awaitReady()
+        turn(chat)
+        assertTrue(authorizationHeaders.all { it.isEmpty() })
+        assertTrue(requests.filter { !it.first.endsWith("/chat") }.all { it.first == "/org/projects/project" })
+        val count = requests.size
+        chat.refreshPreviewResources()
+        assertEquals(count, requests.size)
+    }
+
+    @Test fun refreshedTokenIsUsedForMcpDiscoveryAndResourceReads() = runBlocking(main) {
+        val host = server.url("/").toString().trimEnd('/')
+        var token = "initial"
+        val chat = MetabindAssistant(orgId = "org", projectId = "project", agentHost = host, mcpHost = host,
+            draft = true, accessTokenProvider = { token })
+        assistant = chat
+        chat.awaitReady()
+        assertTrue(authorizationHeaders.all { it == "Bearer initial" })
+        authorizationHeaders.clear()
+        token = "renewed"
+        turn(chat)
+        assertTrue(authorizationHeaders.isNotEmpty())
+        assertTrue(authorizationHeaders.all { it == "Bearer renewed" })
     }
 
     @Test fun resultArrivingBeforeResourceIsRetained() = runBlocking(main) {

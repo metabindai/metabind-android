@@ -49,12 +49,13 @@ import kotlinx.serialization.json.JsonPrimitive
  * ```
  */
 class MetabindAssistant(
-    val apiKey: String,
+    val apiKey: String = "",
     val orgId: String,
     val projectId: String,
     val agentHost: String = MetabindAgentProvider.PRODUCTION_HOST,
     val mcpHost: String = DEFAULT_MCP_HOST,
     val draft: Boolean = false,
+    private val accessTokenProvider: (suspend () -> String)? = null,
 ) {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
@@ -112,7 +113,11 @@ class MetabindAssistant(
     private suspend fun initMCPClient() {
         val client = MCPAppsClient(
             url = mcpServerUrl,
-            headers = mapOf("authorization" to "Bearer $apiKey")
+            headerProvider = {
+                val credential = accessTokenProvider?.invoke() ?: apiKey
+                require(!draft || credential.isNotEmpty()) { "Drafts require sign-in" }
+                if (credential.isEmpty()) emptyMap() else mapOf("Authorization" to "Bearer $credential")
+            }
         )
         mcpClient = client
         try {
@@ -253,6 +258,7 @@ class MetabindAssistant(
             projectId = projectId,
             messages = llmHistory,
             draft = draft,
+            accessTokenProvider = accessTokenProvider,
         ).collect { event ->
             when (event) {
                 is LLMStreamEvent.TextDelta -> {
