@@ -22,7 +22,7 @@ class PreviewCredentials @Inject constructor(@ApplicationContext private val con
 
     @Synchronized
     fun save(project: MCPPreviewLink, credential: String) = secure {
-        require(MCPPreviewLink.credentialPattern.matches(credential))
+        require(credential.isNotBlank())
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())
         cipher.updateAAD(project.serverUrl.toByteArray())
@@ -50,18 +50,18 @@ class PreviewCredentials @Inject constructor(@ApplicationContext private val con
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(1, size + 1)))
         cipher.updateAAD(project.serverUrl.toByteArray())
-        String(cipher.doFinal(bytes.copyOfRange(size + 1, bytes.size))).also {
-            require(MCPPreviewLink.credentialPattern.matches(it))
-        }
+        String(cipher.doFinal(bytes.copyOfRange(size + 1, bytes.size)))
     }
 
     @Synchronized
     fun remove(project: MCPPreviewLink) { file(project).delete() }
 
     private fun file(project: MCPPreviewLink): AtomicFile {
-        val directory = File(context.noBackupFilesDir, "mcp-preview").apply { mkdirs() }
+        // Never interpret a legacy QR API key as an OAuth session.
+        val directory = File(context.noBackupFilesDir, "mcp-oauth").apply { mkdirs() }
         val id = MessageDigest.getInstance("SHA-256").digest(project.serverUrl.toByteArray())
             .joinToString("") { "%02x".format(it) }
+        File(context.noBackupFilesDir, "mcp-preview/$id").delete()
         return AtomicFile(File(directory, id))
     }
 

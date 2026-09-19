@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ai.metabind.data.home.preview.MCPPreviewLink
-import ai.metabind.data.home.preview.PreviewCredentials
 import ai.metabind.data.home.room.RecentItem
 import ai.metabind.data.home.room.RecentsRepository
 import ai.metabind.ui.delegates.AnalyticsDelegate
@@ -25,7 +24,6 @@ class ScanLinkViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val navigationConductor: NavigationConductor,
     private val recentsRepository: RecentsRepository,
-    private val credentials: PreviewCredentials,
 ) : ViewModel(), AnalyticsDelegate by AnalyticsDelegateImpl(navigationName = "ScanLink") {
     private val _viewState = MutableStateFlow(ViewState())
     val viewState = _viewState.asStateFlow()
@@ -38,10 +36,6 @@ class ScanLinkViewModel @Inject constructor(
                 val id = withContext(Dispatchers.IO) {
                     val project = MCPPreviewLink.parse(input)
                     val safeUrl = if (project != null) {
-                        project.apiKey?.let { credentials.save(project, it) }
-                        requireNotNull(credentials.load(project)) {
-                            "This device needs project access. Import a QR from the project's Connect screen."
-                        }
                         project.previewUrl
                     } else MCPPreviewLink.contentUrl(input)
                     recentsRepository.insert(RecentItem(url = safeUrl,
@@ -52,7 +46,7 @@ class ScanLinkViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                _viewState.value = ViewState(error = "Unable to open preview. Use a valid Metabind preview link with project access included.")
+                _viewState.value = ViewState(error = "Unable to open preview. Use a valid Metabind content or project link.")
             }
         }
     }

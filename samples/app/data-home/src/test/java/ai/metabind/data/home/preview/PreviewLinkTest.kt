@@ -10,20 +10,24 @@ class PreviewLinkTest {
     private val endpoint = "https://mcp.metabind.ai/$org/projects/$project"
     private val wrapper = "https://www.metabind.ai/preview/mcp?url=$endpoint/draft"
 
-    @Test fun importsCredentialAndStripsItFromPersistenceAndDiagnostics() {
+    @Test fun discardsLegacyCredentialAndPreservesDraftAndTitle() {
         val parsed = MCPPreviewLink.parse("$wrapper#key=$key&name=Finance%20Preview")!!
-        assertEquals(key, parsed.apiKey)
         assertEquals("Finance Preview", parsed.name)
         assertEquals("$endpoint/draft", parsed.serverUrl)
         assertFalse(parsed.previewUrl.contains(key))
         assertFalse(parsed.toString().contains(key))
         val saved = MCPPreviewLink.parse(parsed.previewUrl)!!
-        assertNull(saved.apiKey)
+        assertTrue(saved.isDraft)
+        assertEquals(parsed.name, saved.name)
         assertEquals(parsed.serverUrl, saved.serverUrl)
     }
 
-    @Test fun directLinkIsNormalizedToDraft() {
-        assertEquals("$endpoint/draft", MCPPreviewLink.parse("$endpoint#key=$key")!!.serverUrl)
+    @Test fun publishedAndDraftLinksRemainSeparate() {
+        val published = MCPPreviewLink.parse("$endpoint#key=$key")!!
+        assertEquals(endpoint, published.serverUrl)
+        assertFalse(published.isDraft)
+        assertFalse(MCPPreviewLink.parse(published.previewUrl)!!.isDraft)
+        assertNotEquals(published.previewUrl, MCPPreviewLink.parse(wrapper)!!.previewUrl)
     }
 
     @Test fun developmentAndProductionAccessAreSeparate() {

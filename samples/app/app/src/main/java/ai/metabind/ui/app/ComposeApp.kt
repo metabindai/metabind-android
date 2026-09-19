@@ -36,6 +36,8 @@ import java.util.TimeZone
 @Composable
 internal fun ComposeApp(
     navigationConductor: NavigationConductor,
+    previewLink: String? = null,
+    onPreviewOpened: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<AppViewModel>()
 
@@ -43,6 +45,18 @@ internal fun ComposeApp(
         val navController = rememberNavController()
         val lifecycleOwner = LocalLifecycleOwner.current
         val environment = buildEnvironment()
+        val context = LocalContext.current
+        LaunchedEffect(previewLink) {
+            if (previewLink != null) {
+                try {
+                    val id = viewModel.importPreview(previewLink)
+                    navController.navigate(Screens.Detail(id).route) { launchSingleTop = true }
+                } catch (error: kotlinx.coroutines.CancellationException) { throw error }
+                catch (_: Exception) {
+                    android.widget.Toast.makeText(context, "Unable to open this preview link.", android.widget.Toast.LENGTH_LONG).show()
+                } finally { onPreviewOpened() }
+            }
+        }
 
         // Observe our navigation flow to see if the app wants to move to a new screen. This might
         // be triggered by the result of a networking call or some other action not directly

@@ -194,6 +194,7 @@ private fun RecentItem(
             contentId = itemState.token,
             name = itemState.name ?: "Unknown",
             isProject = itemState.isProject,
+            isDraft = itemState.isDraft,
             onItemClicked = onItemClicked,
         )
     }
@@ -205,6 +206,7 @@ private fun RecentItemView(
     contentId: String,
     name: String,
     isProject: Boolean,
+    isDraft: Boolean,
     onItemClicked: (Long) -> Unit,
 ) {
     Box(
@@ -233,7 +235,7 @@ private fun RecentItemView(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = if (isProject) "MCP Project · Saved drafts" else "Component",
+                    text = if (isProject) "MCP Project · ${if (isDraft) "Saved drafts" else "Published"}" else "Component",
                     style = MaterialTheme.typography.labelLarge.copy(color = Color.LightGray)
                 )
                 Spacer(modifier = Modifier.height(4.dp))

@@ -4,6 +4,8 @@ package ai.metabind.feature.detail.screens
 
 import ai.metabind.ai.MetabindAssistant
 import ai.metabind.ai.MetabindAssistantView
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -45,6 +47,14 @@ fun DetailScreen(
     viewModel: DetailViewModel,
 ) {
     val viewState = viewModel.viewState.collectAsState().value
+    val signIn = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        viewModel.finishSignIn(it.data)
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.signInIntents.collect { intent ->
+            try { signIn.launch(intent) } catch (_: Exception) { viewModel.browserUnavailable() }
+        }
+    }
 
     BackHandler(enabled = true) {
         viewModel.onBackPressed()
@@ -55,6 +65,8 @@ fun DetailScreen(
         onClose = { viewModel.onBackPressed() },
         assistant = viewModel.assistant,
         onRetry = viewModel::retry,
+        onSignIn = viewModel::signIn,
+        onDisconnect = viewModel::disconnect,
     )
 }
 
@@ -64,6 +76,8 @@ fun DetailContent(
     onClose: () -> Unit,
     assistant: MetabindAssistant? = null,
     onRetry: () -> Unit = {},
+    onSignIn: () -> Unit = {},
+    onDisconnect: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -73,7 +87,15 @@ fun DetailContent(
             when (viewState) {
                 is DetailViewModel.ViewState.Loading -> LoadingState()
                 is DetailViewModel.ViewState.Success -> LoadedState(contentId = viewState.contentId)
-                is DetailViewModel.ViewState.Project -> assistant?.let { ProjectContent(it, viewState) }
+                is DetailViewModel.ViewState.Project -> assistant?.let { ProjectContent(it, viewState, onDisconnect) }
+                is DetailViewModel.ViewState.SignIn -> Column(Modifier.padding(32.dp)) {
+                    Text(viewState.title, style = MaterialTheme.typography.titleLarge)
+                    Text("Sign in to preview drafts")
+                    Text(viewState.error ?: "Use your Metabind account. You need permission to access this project.")
+                    TextButton(onClick = onSignIn, enabled = !viewState.busy) {
+                        Text(if (viewState.busy) "Signing in…" else "Sign in to Metabind")
+                    }
+                }
                 is DetailViewModel.ViewState.Error -> Column(Modifier.padding(32.dp)) {
                     Text("Unable to open preview. Check your connection and project access, or import a new preview QR.")
                     TextButton(onClick = onRetry) { Text("Retry") }
@@ -115,10 +137,11 @@ private fun BoxScope.LoadingState() {
 
 
 @Composable
-private fun ProjectContent(assistant: MetabindAssistant, project: DetailViewModel.ViewState.Project) {
+private fun ProjectContent(assistant: MetabindAssistant, project: DetailViewModel.ViewState.Project, onDisconnect: () -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var refreshUnavailable by remember(assistant) { mutableStateOf(false) }
     LaunchedEffect(assistant, lifecycle) {
+        if (!project.draft) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
                 delay(3_000)
@@ -136,7 +159,8 @@ private fun ProjectContent(assistant: MetabindAssistant, project: DetailViewMode
     Column(Modifier.fillMaxSize().systemBarsPadding()) {
         Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
             Text(project.title, style = MaterialTheme.typography.titleMedium)
-            Text("Saved drafts · ${if (project.development) "Development" else "Production"}", style = MaterialTheme.typography.labelSmall)
+            Text("${if (project.draft) "Saved drafts" else "Published"} · ${if (project.development) "Development" else "Production"}", style = MaterialTheme.typography.labelSmall)
+            if (project.draft) TextButton(onClick = onDisconnect) { Text("Disconnect this project") }
         }
         if (refreshUnavailable) Text("Saved edit refresh is temporarily unavailable.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelSmall)
         MetabindAssistantView(assistant, Modifier.weight(1f))

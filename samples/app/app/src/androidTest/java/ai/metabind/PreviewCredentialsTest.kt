@@ -17,13 +17,13 @@ class PreviewCredentialsTest {
         val link = MCPPreviewLink.parse("https://mcp.metabind.ai/00000000000000000000/projects/11111111111111111111")!!
         val dev = MCPPreviewLink.parse("https://mcp-dev.metabind.ai/00000000000000000000/projects/11111111111111111111")!!
         val store = PreviewCredentials(context)
-        val key = "ab".repeat(32)
+        val key = """{"accessToken":"test-only-token","refreshToken":"test-only-refresh"}"""
         try {
             store.save(link, key)
             assertEquals(key, PreviewCredentials(context).load(link))
             assertNull(store.load(dev))
             val id = MessageDigest.getInstance("SHA-256").digest(link.serverUrl.toByteArray()).joinToString("") { "%02x".format(it) }
-            val file = File(context.noBackupFilesDir, "mcp-preview/$id")
+            val file = File(context.noBackupFilesDir, "mcp-oauth/$id")
             assertTrue(file.exists())
             assertFalse(String(file.readBytes()).contains(key))
             val bytes = file.readBytes()

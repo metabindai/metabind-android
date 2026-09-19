@@ -17,6 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "ai.metabind.app"
+        manifestPlaceholders["appAuthRedirectScheme"] = "ai.metabind.app.oauth"
         minSdk = libs.versions.android.min.sdk.get().toInt()
         targetSdk = libs.versions.android.target.sdk.get().toInt()
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "9").toInt()
@@ -54,6 +55,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["appAuthRedirectScheme"] = "ai.metabind.app.debug.oauth"
         }
 
         create("debugRelease") {
@@ -136,4 +138,5 @@ dependencies {
     implementation(project(":base-ui"))
     implementation(project(":base-theme"))
     implementation(project(":feature-home"))
+    implementation(project(":data-home"))
 }

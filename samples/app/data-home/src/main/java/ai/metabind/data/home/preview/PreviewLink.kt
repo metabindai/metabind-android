@@ -4,17 +4,17 @@ import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-/** Credentials exist only during import, never in recents or navigation state. */
+/** A project link identifies a version; it grants no access. */
 class MCPPreviewLink private constructor(
     val organizationId: String,
     val projectId: String,
     val isDevelopment: Boolean,
     val name: String?,
-    val apiKey: String?,
+    val isDraft: Boolean,
 ) {
     val mcpHost get() = if (isDevelopment) "https://mcp-dev.metabind.ai" else "https://mcp.metabind.ai"
-    val serverUrl get() = "$mcpHost/$organizationId/projects/$projectId/draft"
-    val previewUrl get() = "https://${if (isDevelopment) "dev" else "www"}.metabind.ai/preview/mcp?url=${encode(serverUrl)}"
+    val serverUrl get() = "$mcpHost/$organizationId/projects/$projectId" + if (isDraft) "/draft" else ""
+    val previewUrl get() = "https://${if (isDevelopment) "dev" else "www"}.metabind.ai/preview/mcp?url=${encode(serverUrl)}" + (name?.let { "&name=${encode(it)}" } ?: "")
     val title get() = name ?: "MCP Project"
 
     // Intentionally omit the credential from diagnostics.
@@ -45,7 +45,7 @@ class MCPPreviewLink private constructor(
             val key = fragment["key"]
             require(key == null || credentialPattern.matches(key))
             MCPPreviewLink(parts[1], parts[3], endpoint.host.equals("mcp-dev.metabind.ai", true),
-                (fragment["name"] ?: query["name"])?.trim()?.take(120)?.ifEmpty { null }, key)
+                (fragment["name"] ?: query["name"])?.trim()?.take(120)?.ifEmpty { null }, parts.size == 5)
         }
 
         fun contentUrl(input: String): String = guarded {
