@@ -73,9 +73,6 @@ publishing {
     }
 }
 
-configurations.all {
-    exclude(group = "com.atlassian.commonmark", module = "commonmark")
-}
 
 dependencies {
     testImplementation("junit:junit:4.13.2")

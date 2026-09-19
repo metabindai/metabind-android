@@ -1,19 +1,23 @@
 # Proposed Android package cutover
 
-**Not active yet.** The release candidates are prepared locally. Existing GitHub
+**Not active yet.** Publication configuration is prepared in source. Existing GitHub
 packages are still present. No deletion or completed migration is implied by
 this document.
 
-## Release candidates and destinations
+## Version baseline and destinations
 
-| Artifact | Candidate | GitHub Packages repository |
+| Artifact | Current main baseline | GitHub Packages repository |
 | --- | --- | --- |
-| `ai.metabind:bindjs-android` | `0.0.31` | `metabindai/bindjs-android` |
-| `ai.metabind:metabindai-android` | `0.2.10` | `metabindai/metabind-android` |
-| `ai.metabind:mcpappshost-android` | `0.2.10` | `metabindai/metabind-android` |
-| `ai.metabind:metabind-content-android` | `0.2.10` | `metabindai/metabind-android` |
+| `ai.metabind:bindjs-android` | `0.0.33` | `metabindai/bindjs-android` |
+| `ai.metabind:metabindai-android` | `0.2.12` | `metabindai/metabind-android` |
+| `ai.metabind:mcpappshost-android` | `0.2.12` | `metabindai/metabind-android` |
+| `ai.metabind:metabind-content-android` | `0.2.12` | `metabindai/metabind-android` |
 
-The old `bindjs-android-binary` repository holds these four packages plus the
+These version pins follow main; they are not replacement release candidates.
+The new preview APIs require a new SDK release. Choose unused release versions
+and update consumers during the cutover rather than overwriting existing releases.
+
+As verified September 18, 2026, the old `bindjs-android-binary` repository holds these four packages plus the
 retired `ai.metabind:metabind-android` and
 `ai.metabind:metabind-assistant-android` packages. A complete retirement must
 account for all six; moving only BindJS leaves the SDK distribution behind.

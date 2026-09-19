@@ -11,6 +11,7 @@ import ai.metabind.bindjs.McpHost
 import ai.metabind.bindjs.composables.BindJSView
 import ai.metabind.bindjs.composables.LocalHostScrollsVertically
 import ai.metabind.bindjs.composables.UiEvent
+import ai.metabind.bindjs.composables.routeUiEvent
 import ai.metabind.bindjs.model.BaseComponent
 import android.content.Intent
 import android.net.Uri
@@ -359,26 +360,17 @@ iframe{border:0;width:100%;height:100%;display:block;background:transparent}
 """.trimIndent()
 }
 
+/**
+ * Hands the event to bindjs's own router rather than re-deriving the dispatch here: the
+ * mapping is not obvious (a drag must not be followed by an explicit render, and the
+ * events carrying a value have to forward it), and a `when` of our own silently falls
+ * behind every event bindjs adds — a list selection was dropped that way.
+ *
+ * No `onRendered`: a tool card re-renders off the `setOnRerenderRequested` listener.
+ */
 private fun handleBindJSEvent(jsRuntime: JsRuntime, event: UiEvent) {
     CoroutineScope(Dispatchers.IO).launch {
-        when (event) {
-            is UiEvent.OnTap -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnAppear -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnDisappear -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnChange -> jsRuntime.callEventHandler(
-                event.handlerId,
-                arrayOf(event.oldValue ?: "", event.newValue ?: "")
-            )
-            is UiEvent.OnLongPress -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnSwitch -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.checked))
-            is UiEvent.OnTextChange -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.text))
-            // Coalesced + serialized inside bindjs (latest-wins on the `changed`
-            // phase); re-renders via the setOnRerenderRequested listener.
-            is UiEvent.OnDrag -> jsRuntime.dispatchDragEvent(event.handlerId, event.state)
-            is UiEvent.OnNavigationTap -> jsRuntime.callEventHandler(event.handlerId)
-            is UiEvent.OnPickerTap -> jsRuntime.callPickerSetter(event.setterId, event.tag)
-            is UiEvent.OnChartSelection -> jsRuntime.callEventHandler(event.handlerId, arrayOf(event.value))
-        }
+        jsRuntime.routeUiEvent(event)
     }
 }
 
