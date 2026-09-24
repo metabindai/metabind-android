@@ -65,13 +65,7 @@ gpr.user=<your-github-username>
 gpr.key=<your-github-token>
 ```
 
-Publishing is prepared for the public source repositories: BindJS from
-`bindjs-android`, and the SDK from `metabind-android`. The branch retains main's
-version pins; the preview APIs require a new SDK release before registry consumers
-can use them. **The registry migration has not happened yet.** See the
-[proposed migration guide](docs/PACKAGE_MIGRATION.md) before switching an
-existing project. After the cutover, configure both repositories in your
-`settings.gradle.kts`:
+Add the repository in your `settings.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
@@ -79,15 +73,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/metabindai/bindjs-android")
-            content { includeModule("ai.metabind", "bindjs-android") }
-            credentials {
-                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
-                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
-        maven {
-            url = uri("https://maven.pkg.github.com/metabindai/metabind-android")
+            url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {
                 username = providers.gradleProperty("gpr.user").orElse(providers.environmentVariable("GITHUB_ACTOR")).get()
                 password = providers.gradleProperty("gpr.key").orElse(providers.environmentVariable("GITHUB_TOKEN")).get()
