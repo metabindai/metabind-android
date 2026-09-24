@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.MaterialTheme
@@ -30,12 +31,13 @@ import ai.metabind.ui.theme.AppTheme
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.time.Instant
-import java.util.Locale
 import java.util.TimeZone
 
 @Composable
 internal fun ComposeApp(
     navigationConductor: NavigationConductor,
+    previewLink: String? = null,
+    onPreviewOpened: () -> Unit = {},
 ) {
     val viewModel = hiltViewModel<AppViewModel>()
 
@@ -43,6 +45,18 @@ internal fun ComposeApp(
         val navController = rememberNavController()
         val lifecycleOwner = LocalLifecycleOwner.current
         val environment = buildEnvironment()
+        val context = LocalContext.current
+        LaunchedEffect(previewLink) {
+            if (previewLink != null) {
+                try {
+                    val id = viewModel.importPreview(previewLink)
+                    navController.navigate(Screens.Detail(id).route) { launchSingleTop = true }
+                } catch (error: kotlinx.coroutines.CancellationException) { throw error }
+                catch (_: Exception) {
+                    android.widget.Toast.makeText(context, "Unable to open this preview link.", android.widget.Toast.LENGTH_LONG).show()
+                } finally { onPreviewOpened() }
+            }
+        }
 
         // Observe our navigation flow to see if the app wants to move to a new screen. This might
         // be triggered by the result of a networking call or some other action not directly
@@ -53,7 +67,8 @@ internal fun ComposeApp(
             }.launchIn(this)
         }
 
-        Scaffold { padding ->
+        // Screens own their system-bar insets; keep the navigation host edge-to-edge.
+        Scaffold(contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
@@ -70,6 +85,7 @@ internal fun ComposeApp(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(padding)
                     .background(MaterialTheme.colorScheme.background)
             ) {
                 NavHost(
@@ -133,7 +149,7 @@ private fun buildEnvironment(
                 )
             )
         ),
-        "locale" to Locale.getDefault().toString(),
+        "locale" to configuration.locales[0].toString(),
         "timeZone" to TimeZone.getDefault().toString(),
         "colorScheme" to when (configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
             Configuration.UI_MODE_NIGHT_YES -> "dark"

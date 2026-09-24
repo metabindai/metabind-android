@@ -20,18 +20,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal() // for SDK development against `publishToMavenLocal` builds of the monorepo SDKs
+        // BindJS and the Metabind SDKs are published to GitHub Packages under bindjs-android-binary.
         maven {
             url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {
-                username = providers.gradleProperty("gpr.user").orElse(providers.environmentVariable("GITHUB_ACTOR")).get()
-                password = providers.gradleProperty("gpr.key").orElse(providers.environmentVariable("GITHUB_TOKEN")).get()
-            }
-        }
-        maven {
-            url = uri("https://maven.pkg.github.com/yapstudios/bindjs-android-binary")
-            credentials {
-                username = providers.gradleProperty("gpr.user").orElse(providers.environmentVariable("GITHUB_ACTOR")).get()
-                password = providers.gradleProperty("gpr.key").orElse(providers.environmentVariable("GITHUB_TOKEN")).get()
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN")
             }
         }
     }

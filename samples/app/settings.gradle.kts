@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Use Github packages
+        // BindJS and the Metabind SDKs are published to GitHub Packages under bindjs-android-binary.
         maven {
             url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {
@@ -47,5 +47,7 @@ include(":dynamicfeature")
 includeBuild("../..") {
     dependencySubstitution {
         substitute(module("ai.metabind:metabind-content-android")).using(project(":metabind-content"))
+        substitute(module("ai.metabind:metabindai-android")).using(project(":metabindai"))
+        substitute(module("ai.metabind:mcpappshost-android")).using(project(":mcpappshost"))
     }
 }

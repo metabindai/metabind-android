@@ -193,6 +193,8 @@ private fun RecentItem(
             itemId = itemState.id,
             contentId = itemState.token,
             name = itemState.name ?: "Unknown",
+            isProject = itemState.isProject,
+            isDraft = itemState.isDraft,
             onItemClicked = onItemClicked,
         )
     }
@@ -203,6 +205,8 @@ private fun RecentItemView(
     itemId: Long,
     contentId: String,
     name: String,
+    isProject: Boolean,
+    isDraft: Boolean,
     onItemClicked: (Long) -> Unit,
 ) {
     Box(
@@ -223,14 +227,15 @@ private fun RecentItemView(
                     .clip(RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                ThumbnailView(contentId)
+                if (isProject) Text("MCP", style = MaterialTheme.typography.titleLarge)
+                else ThumbnailView(contentId)
             }
             Column(
                 modifier = Modifier.padding(start = 10.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Component",
+                    text = if (isProject) "MCP Project · ${if (isDraft) "Saved drafts" else "Published"}" else "Component",
                     style = MaterialTheme.typography.labelLarge.copy(color = Color.LightGray)
                 )
                 Spacer(modifier = Modifier.height(4.dp))

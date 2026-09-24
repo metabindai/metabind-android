@@ -1,5 +1,7 @@
 package ai.metabind.feature.recents.screens
 
+import ai.metabind.data.home.preview.MCPPreviewLink
+import ai.metabind.data.home.preview.PreviewOAuth
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -27,6 +29,7 @@ class RecentsViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val navigationConductor: NavigationConductor,
     private val recentsRepository: RecentsRepository,
+    private val oauth: PreviewOAuth,
     @ApplicationContext private val appContext: Context,
 ) : ViewModel(),
     AnalyticsDelegate by AnalyticsDelegateImpl(
@@ -48,11 +51,13 @@ class RecentsViewModel @Inject constructor(
                         existingItems[recent.uid] ?: RecentItemViewState(
                             id = recent.uid,
                             token = recent.token,
-                            name = recent.name
+                            name = recent.name,
+                            isProject = runCatching { MCPPreviewLink.parse(recent.url) != null }.getOrDefault(false),
+                            isDraft = runCatching { MCPPreviewLink.parse(recent.url)?.isDraft == true }.getOrDefault(false)
                         )
                     })
                 )
-                recents.filter { it.name == null }.forEach { recent ->
+                recents.filter { it.name == null && runCatching { MCPPreviewLink.parse(it.url) == null }.getOrDefault(true) }.forEach { recent ->
                     launch { fetchAndSaveName(recent.uid, recent.token) }
                 }
             }
@@ -94,6 +99,9 @@ class RecentsViewModel @Inject constructor(
 
     fun onRemove(itemId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
+            recentsRepository.getById(itemId)?.let { item ->
+                runCatching { MCPPreviewLink.parse(item.url) }.getOrNull()?.let { oauth.disconnect(it) }
+            }
             recentsRepository.delete(itemId)
             updateState(
                 viewState.value.copy(recents = viewState.value.recents?.filter { it.id != itemId })
@@ -122,6 +130,8 @@ class RecentsViewModel @Inject constructor(
     data class RecentItemViewState(
         val id: Long,
         val token: String,
+        val isProject: Boolean = false,
+        val isDraft: Boolean = false,
         val isLoading: Boolean = true,
         val error: Boolean = false,
         val name: String? = null,

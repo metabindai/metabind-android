@@ -5,6 +5,7 @@ import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,20 +26,21 @@ fun CameraScreen(
         LifecycleCameraController(localContext)
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val barcodeScanner = remember {
+        BarcodeScanning.getClient(BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build())
+    }
+    DisposableEffect(cameraController, lifecycleOwner) {
+        cameraController.bindToLifecycle(lifecycleOwner)
+        onDispose {
+            cameraController.clearImageAnalysisAnalyzer()
+            cameraController.unbind()
+            barcodeScanner.close()
+        }
+    }
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { ctx ->
             PreviewView(ctx).apply {
-                // Configure barcode scanning options for supported formats
-                val options = BarcodeScannerOptions.Builder()
-                    .setBarcodeFormats(
-                        Barcode.FORMAT_ALL_FORMATS,
-                    )
-                    .build()
-
-                // Initialize the barcode scanner client with the configured options
-                val barcodeScanner = BarcodeScanning.getClient(options)
-
                 // Set up the image analysis analyzer for barcode detection
                 cameraController.setImageAnalysisAnalyzer(
                     ContextCompat.getMainExecutor(ctx), // Use the main executor
@@ -56,9 +58,6 @@ fun CameraScreen(
                         }
                     }
                 )
-
-                // Bind the camera controller to the lifecycle owner
-                cameraController.bindToLifecycle(lifecycleOwner)
 
                 // Set the camera controller for the PreviewView
                 this.controller = cameraController

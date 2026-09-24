@@ -20,8 +20,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         mavenLocal()
-        // BindJS is consumed as a published GitHub Packages artifact and kept in its
-        // own repo (bindjs-android / bindjs-android-binary), exactly like bindjs-apple-binary.
+        // BindJS and the Metabind SDKs are published to GitHub Packages under bindjs-android-binary.
         maven {
             url = uri("https://maven.pkg.github.com/metabindai/bindjs-android-binary")
             credentials {

@@ -17,6 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "ai.metabind.app"
+        manifestPlaceholders["appAuthRedirectScheme"] = "ai.metabind.app.oauth"
         minSdk = libs.versions.android.min.sdk.get().toInt()
         targetSdk = libs.versions.android.target.sdk.get().toInt()
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "9").toInt()
@@ -54,6 +55,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["appAuthRedirectScheme"] = "ai.metabind.app.debug.oauth"
         }
 
         create("debugRelease") {
@@ -103,6 +105,11 @@ android {
     dynamicFeatures += setOf(":dynamicfeature")
 }
 
+// Match the assistant samples: BindJS/Markwon and chat share the newer CommonMark.
+configurations.all {
+    exclude(group = "com.atlassian.commonmark", module = "commonmark")
+}
+
 dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material)
@@ -123,10 +130,13 @@ dependencies {
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.timber)
     testImplementation(libs.junit)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.10.4")
+    androidTestImplementation(project(":data-home"))
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 
     implementation(project(":base-ui"))
     implementation(project(":base-theme"))
     implementation(project(":feature-home"))
+    implementation(project(":data-home"))
 }

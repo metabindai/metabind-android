@@ -5,7 +5,7 @@
 
     <dist:module dist:instant="true" />
 
-    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -19,6 +19,7 @@
         android:theme="@style/AppTheme.ComposeTheming">
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:screenOrientation="userPortrait"
             android:windowSoftInputMode="adjustResize"
@@ -27,6 +28,15 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="www.metabind.ai" />
+                <data android:host="dev.metabind.ai" />
+                <data android:pathPrefix="/preview/" />
             </intent-filter>
         </activity>
 

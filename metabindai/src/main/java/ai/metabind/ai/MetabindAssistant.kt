@@ -10,6 +10,11 @@ import ai.metabind.mcpappshost.LLMStreamEvent
 import ai.metabind.mcpappshost.LLMToolCall
 import ai.metabind.mcpappshost.MCPAppsClient
 import android.util.Log
+import ai.metabind.mcpappshost.ResourceContent
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,11 +49,13 @@ import kotlinx.serialization.json.JsonPrimitive
  * ```
  */
 class MetabindAssistant(
-    val apiKey: String,
+    val apiKey: String = "",
     val orgId: String,
     val projectId: String,
     val agentHost: String = MetabindAgentProvider.PRODUCTION_HOST,
     val mcpHost: String = DEFAULT_MCP_HOST,
+    val draft: Boolean = false,
+    private val accessTokenProvider: (suspend () -> String)? = null,
 ) {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
@@ -71,7 +78,7 @@ class MetabindAssistant(
     private val supervisorJob = SupervisorJob()
     private val scope = CoroutineScope(supervisorJob + Dispatchers.Main)
     private val agentProvider = MetabindAgentProvider()
-    private val mcpServerUrl = "$mcpHost/$orgId/projects/$projectId"
+    private val mcpServerUrl = "$mcpHost/$orgId/projects/$projectId" + if (draft) "/draft" else ""
 
     private var mcpClient: MCPAppsClient? = null
     private var toolUIMap: Map<String, String> = emptyMap()
@@ -79,6 +86,11 @@ class MetabindAssistant(
     private val pendingContext: MutableMap<String, JsonElement> = linkedMapOf()
     private var initJob: Job? = null
     private var streamJob: Job? = null
+    private var generation = 0
+    private var initializationError: Exception? = null
+    private val refreshMutex = Mutex()
+    private val resourceSnapshots = mutableMapOf<String, ResourceContent>()
+    private val toolInputs = mutableMapOf<String, JsonElement?>()
 
     /**
      * The `ui://` resource reads started by the turn currently streaming.
@@ -95,13 +107,17 @@ class MetabindAssistant(
     private val uiContentJobs = mutableListOf<Job>()
 
     init {
-        initJob = scope.launch(Dispatchers.IO) { initMCPClient() }
+        initJob = scope.launch { initMCPClient() }
     }
 
     private suspend fun initMCPClient() {
         val client = MCPAppsClient(
             url = mcpServerUrl,
-            headers = mapOf("authorization" to "Bearer $apiKey")
+            headerProvider = {
+                val credential = accessTokenProvider?.invoke() ?: apiKey
+                require(!draft || credential.isNotEmpty()) { "Drafts require sign-in" }
+                if (credential.isEmpty()) emptyMap() else mapOf("Authorization" to "Bearer $credential")
+            }
         )
         mcpClient = client
         try {
@@ -110,15 +126,57 @@ class MetabindAssistant(
                 .filter { it.ui?.resourceUri != null }
                 .associate { it.name to it.ui!!.resourceUri }
             Log.d(TAG, "Loaded ${tools.size} tools, ${toolUIMap.size} with UI: ${toolUIMap.keys}")
+            initializationError = null
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load tools from MCP", e)
+            initializationError = e
+            Log.e(TAG, "Failed to load tools from MCP")
+        }
+    }
+
+    /** Wait for authenticated MCP discovery. No messages or tools are executed. */
+    suspend fun awaitReady() {
+        initJob?.join()
+        initializationError?.let { throw it }
+    }
+
+    /**
+     * Refresh saved tool definitions and existing cards without replaying tool calls.
+     * Invoke while the preview is foregrounded. Published assistants are unchanged.
+     * A turn or reset that starts during a read makes that refresh obsolete.
+     */
+    suspend fun refreshPreviewResources() = withContext(Dispatchers.Main.immediate) {
+        if (!draft || _isLoading.value) return@withContext
+        refreshMutex.withLock {
+            val current = generation
+            fun obsolete() = current != generation || _isLoading.value
+            awaitReady()
+            val client = mcpClient ?: return@withLock
+            val tools = client.listTools()
+            if (obsolete()) return@withLock
+            val nextUIMap = tools.mapNotNull { tool -> tool.ui?.resourceUri?.let { tool.name to it } }.toMap()
+            toolUIMap = nextUIMap
+            val resources = mutableMapOf<String, ResourceContent>()
+            for (message in _messages.value.filter { it.role == MessageRole.TOOL }) {
+                val uri = nextUIMap[message.toolName] ?: continue
+                val resource = resources[uri] ?: client.readResource(uri).also { resources[uri] = it }
+                if (obsolete()) return@withLock
+                if (resourceSnapshots[message.id] == resource) continue
+                var content = ToolUIContent.fromResource(resource, toolInputs[message.id])
+                if (message.toolStatus != ToolStatus.LOADING) {
+                    content = content.withResult(message.content, message.toolStatus == ToolStatus.ERROR)
+                }
+                resourceSnapshots[message.id] = resource
+                _toolUIContent.value = _toolUIContent.value + (message.id to content)
+            }
         }
     }
 
     /** Send a user message and begin streaming the response. No-op if already loading. */
     fun send(text: String) {
         if (text.isBlank() || _isLoading.value) return
-        Log.d(TAG, "Sending message: `$text`")
+        val current = ++generation
 
         val userMessage = ChatMessage(role = MessageRole.USER, content = text)
         _messages.value = _messages.value + userMessage
@@ -128,13 +186,19 @@ class MetabindAssistant(
         val modelText = consumePendingContextPrefix()?.let { "$it\n\n$text" } ?: text
         llmHistory.add(LLMMessage.User(modelText))
 
-        streamJob = scope.launch(Dispatchers.IO) {
-            initJob?.join()
-            if (mcpClient == null) initMCPClient()
+        streamJob = scope.launch {
             try {
+                initJob?.join()
+                if (draft) {
+                    initializationError?.let { throw it }
+                    val tools = mcpClient!!.listTools()
+                    toolUIMap = tools.mapNotNull { tool -> tool.ui?.resourceUri?.let { tool.name to it } }.toMap()
+                }
                 streamAgentResponse()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                val message = e.message ?: "Something went wrong"
+                val message = if (draft) "Unable to complete the preview message. Check project access and try again." else e.message ?: "Something went wrong"
                 _error.value = message
                 _messages.value = _messages.value + ChatMessage(
                     role = MessageRole.ERROR,
@@ -144,14 +208,17 @@ class MetabindAssistant(
                 // Wait out the card reads this turn started, so dropping the flag
                 // means the turn is fully materialized. `cancel` takes and cancels
                 // those same jobs, so an abandoned turn finds nothing to wait on.
-                takeUIContentJobs().joinAll()
-                _isLoading.value = false
+                if (current == generation) {
+                    takeUIContentJobs().joinAll()
+                    _isLoading.value = false
+                }
             }
         }
     }
 
     /** Cancel any in-progress response. */
     fun cancel() {
+        generation++
         streamJob?.cancel()
         streamJob = null
         // Outstanding card reads belong to the turn being abandoned. Left running
@@ -165,6 +232,8 @@ class MetabindAssistant(
         cancel()
         _messages.value = emptyList()
         _toolUIContent.value = emptyMap()
+        resourceSnapshots.clear()
+        toolInputs.clear()
         _error.value = null
         llmHistory.clear()
         pendingContext.clear()
@@ -173,6 +242,7 @@ class MetabindAssistant(
 
     /** Release the internal coroutine scope. Call when discarding the instance. */
     fun close() {
+        generation++
         supervisorJob.cancel()
     }
 
@@ -186,7 +256,9 @@ class MetabindAssistant(
             apiKey = apiKey,
             orgId = orgId,
             projectId = projectId,
-            messages = llmHistory
+            messages = llmHistory,
+            draft = draft,
+            accessTokenProvider = accessTokenProvider,
         ).collect { event ->
             when (event) {
                 is LLMStreamEvent.TextDelta -> {
@@ -217,6 +289,7 @@ class MetabindAssistant(
                     )
                     _messages.value = _messages.value + toolMsg
 
+                    toolInputs[event.id] = event.arguments
                     val resourceUri = toolUIMap[event.name]
                     if (resourceUri != null) {
                         fetchToolUIContent(event.id, event.name, resourceUri, event.arguments)
@@ -260,15 +333,22 @@ class MetabindAssistant(
         resourceUri: String,
         toolArguments: JsonElement?,
     ) {
-        val job = scope.launch(Dispatchers.IO) {
+        val job = scope.launch {
             try {
                 val client = mcpClient ?: return@launch
                 val resource = client.readResource(resourceUri)
-                val content = ToolUIContent.fromResource(resource, toolArguments)
+                var content = ToolUIContent.fromResource(resource, toolArguments)
+                val message = _messages.value.find { it.id == toolCallId }
+                if (message != null && message.toolStatus != ToolStatus.LOADING) {
+                    content = content.withResult(message.content, message.toolStatus == ToolStatus.ERROR)
+                }
+                resourceSnapshots[toolCallId] = resource
                 _toolUIContent.value = _toolUIContent.value + (toolCallId to content)
                 Log.d(TAG, "Loaded UI content for $toolName: ${content::class.simpleName}")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to fetch UI content for $toolName", e)
+                Log.e(TAG, "Failed to fetch UI content for $toolName")
             }
         }
         trackUIContentJob(job)

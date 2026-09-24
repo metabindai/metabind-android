@@ -42,6 +42,8 @@ android {
         baseline = file("lint-baseline.xml")
     }
 
+    testOptions { unitTests.isReturnDefaultValues = true }
+
     publishing {
         multipleVariants {
             includeBuildTypeValues("release", "debug")
@@ -73,6 +75,10 @@ publishing {
 
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    // Match OkHttp selected transitively by the current BindJS dependency.
+    testImplementation("com.squareup.okhttp3:mockwebserver:5.0.0-alpha.14")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     api(project(":mcpappshost"))
     api(libs.bindjs)
     api(libs.kotlinx.serialization.json)

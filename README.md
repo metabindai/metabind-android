@@ -49,7 +49,9 @@ The full guides live on [docs.metabind.ai](https://docs.metabind.ai):
 
 ## Installation
 
-All Metabind libraries — and their BindJS dependency — are published to GitHub Packages, which requires authentication to resolve. Provide credentials via environment variables:
+All Metabind libraries — and their BindJS dependency — are published to GitHub Packages, which requires authentication even for public packages. Use a personal access token
+(classic) with `read:packages`, or a GitHub Actions `GITHUB_TOKEN` with package read
+access. Repository access alone does not grant package access. Provide credentials via environment variables:
 
 ```bash
 export GITHUB_ACTOR=<your-github-username>
@@ -119,7 +121,20 @@ The assistant derives the MCP server URL from your org and project ids; the opti
 > [!NOTE]
 > Retain the `MetabindAssistant` instance at an appropriate scope — inside a ViewModel, for example — and call `close()` when you discard it. The Android SDK is Agent-proxy only: there's no bring-your-own-key provider, so no LLM credential ever ships in your APK.
 
-One Metabind API key authenticates both the MCP server and the agent proxy.
+A supplied Metabind API key authenticates both the MCP server and the agent proxy.
+
+### Public chat and account tokens
+
+For a public published project, omit `apiKey` when constructing
+`MetabindAssistant`. No Authorization header is sent; the Agent receives a random
+private guest-session identifier. Guest chat requires the matching Agent deployment.
+Draft and private access still requires credentials.
+
+For account sign-in, supply `accessTokenProvider = { ... }`, a suspend callback
+that returns a fresh access token. Both MCP requests and Agent turns resolve it
+when needed. The host app owns browser login, encrypted storage, and refresh.
+Anonymous drafts are rejected before network access. Never put tokens or guest
+session identifiers in shared project URLs.
 
 ## MCPAppsHost: render a single tool result
 
@@ -220,3 +235,22 @@ GraphQL schema and operations for the content module live in
 ## License
 
 Apache License 2.0. See [`LICENSE`](LICENSE).
+
+
+## Saved-draft assistant previews
+
+Pass `draft = true` to `MetabindAssistant` to use the MCP draft endpoint and request
+saved draft configuration from the Agent service. The default remains published
+mode. Preview hosts can call `awaitReady()` before showing chat to validate MCP
+access without sending a message or executing a tool.
+
+Call `refreshPreviewResources()` from a lifecycle-aware coroutine while the host
+is resumed (the preview sample uses a three-second interval). It refreshes tool
+definitions and existing UI resources between turns while preserving messages,
+tool arguments, results, and the conversation. Identical resources do not recreate
+cards, and an intervening turn or reset discards stale refresh results. Refresh
+never replays tool calls. `close()` releases the assistant when its host is removed.
+
+The `samples/app` preview host supports importing scoped access from a QR or URL,
+secure local credential storage, and reopening saved projects. See its README
+for the link format and local test workflow.
