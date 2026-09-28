@@ -1,6 +1,8 @@
-# Metabind for Android
+# Metabind for Android: MCP Apps host and Assistant SDK for Jetpack Compose
 
-The native Android SDK for Metabind. Embed a governed agent in your Android app, and render Metabind-managed content as native Jetpack Compose.
+`:metabindai` is the Assistant SDK for Android: it puts a governed agent inside your own app and renders the agent's MCP App UIs, written in BindJS, as native Jetpack Compose, not in a WebView. It uses the same MCP App you publish to Claude, ChatGPT, and every MCP host.
+
+**What it renders.** BindJS resources (`application/vnd.bindjs+json`) are drawn by the Apache 2.0 [BindJS Compose renderer](https://github.com/metabindai/bindjs-android), with component logic running in an `androidx.javascriptengine` isolate. `:mcpappshost` is the MCP Apps client underneath. To render one tool's UI outside the chat view, use `MetabindToolView`.
 
 ## What this is
 
@@ -11,10 +13,10 @@ This repository is the Android side. It ships three libraries you can adopt inde
 | Library | Artifact | Use it to |
 |---|---|---|
 | `:metabindai` | `ai.metabind:metabindai-android` | Embed the agent in your app. The Assistant SDK drops in a conversational view that runs the agent and renders its Interactive Tool responses as native Compose. |
-| `:mcpappshost` | `ai.metabind:mcpappshost-android` | Render a single MCP tool result without the conversational layer. The low-level building blocks (`MCPAppsClient`) that `:metabindai` is built on. |
+| `:mcpappshost` | `ai.metabind:mcpappshost-android` | Connect to the MCP server directly, without the conversational layer: list tools, call them, and read their UI resources. It holds the low-level MCP Apps client (`MCPAppsClient`) and data types that `:metabindai` is built on, and renders no UI; `MetabindToolView` in `:metabindai` renders one tool's UI. |
 | `:metabind-content` | `ai.metabind:metabind-content-android` | Fetch and render content from Metabind's content platform. A Compose view, an Apollo GraphQL client, SQLite-backed caching, and real-time updates over WebSocket. |
 
-Everything renders through BindJS as real native Jetpack Compose, not web views. The three libraries have different dependency footprints, so you depend only on the ones you use: a content-only app doesn't link the assistant, and an assistant-only app doesn't link the GraphQL client.
+Everything written in BindJS renders as native Jetpack Compose, not in a web view. The three libraries have different dependency footprints, so you depend only on the ones you use: a content-only app doesn't link the assistant, and an assistant-only app doesn't link the GraphQL client.
 
 > [!NOTE]
 > BindJS is the open component language for agent UI, rendered natively as SwiftUI, Jetpack Compose, and React; the Compose rendering engine is its Android half. This SDK links it as a precompiled binary (`ai.metabind:bindjs-android`, published to GitHub Packages). All of BindJS is open source under Apache 2.0: the runtime and React renderer, and the native SwiftUI and Jetpack Compose engines.
