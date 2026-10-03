@@ -9,46 +9,46 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.*
 import org.junit.Test
 
-class GuestChatTest {
+class AuthenticatedChatTest {
     private fun response() = MockResponse().setHeader("Content-Type", "text/event-stream")
         .setBody("event: message_stop\ndata: {\"stopReason\":\"end_turn\"}\n\n")
 
-    @Test fun publishedRequestsOmitBearerAndKeepPrivateGuestSession() = runBlocking {
+    @Test fun publishedAndDraftRequireCredentialsBeforeNetwork() = runBlocking {
         val server = MockWebServer()
         server.start()
         try {
-            val provider = MetabindAgentProvider()
-            repeat(2) {
-                server.enqueue(response())
-                provider.streamMessage(server.url("/").toString().trimEnd('/'), orgId = "org", projectId = "project", messages = listOf(LLMMessage.User("Hello"))).toList()
-                val request = server.takeRequest()
-                assertNull(request.getHeader("Authorization"))
-                assertEquals(provider.guestSessionId, request.getHeader("X-Metabind-Guest-Session"))
-                assertFalse(request.body.readUtf8().contains("\"draft\":true"))
+            for (draft in listOf(false, true)) {
+                for (token in listOf("", "   ")) {
+                    val events = MetabindAgentProvider().streamMessage(server.url("/").toString(), apiKey = token,
+                        orgId = "org", projectId = "project", messages = emptyList(), draft = draft).toList()
+                    assertTrue(events.any { it is LLMStreamEvent.Error })
+                }
             }
-            assertNotEquals(provider.guestSessionId, MetabindAgentProvider().guestSessionId)
+            assertEquals(0, server.requestCount)
         } finally { server.shutdown() }
     }
 
-    @Test fun anonymousDraftFailsBeforeNetwork() = runBlocking {
+    @Test fun failedTokenRefreshNeverFallsBackToAKeyOrAnonymousRequest() = runBlocking {
         val server = MockWebServer()
         server.start()
         try {
-            val events = MetabindAgentProvider().streamMessage(server.url("/").toString(), orgId = "org", projectId = "project", messages = emptyList(), draft = true).toList()
+            val events = MetabindAgentProvider().streamMessage(server.url("/").toString(), apiKey = "old-key",
+                orgId = "org", projectId = "project", messages = emptyList(),
+                accessTokenProvider = { error("Sign in required") }).toList()
             assertTrue(events.any { it is LLMStreamEvent.Error })
             assertEquals(0, server.requestCount)
         } finally { server.shutdown() }
     }
 
-    @Test fun draftTokenProviderRunsAgainForEveryTurn() = runBlocking {
+    @Test fun tokenProviderRunsAgainForPublishedAndDraftTurns() = runBlocking {
         val server = MockWebServer()
         server.start()
         try {
             val provider = MetabindAgentProvider()
             var token = "first-token"
-            repeat(2) {
+            for (draft in listOf(false, true)) {
                 server.enqueue(response())
-                provider.streamMessage(server.url("/").toString().trimEnd('/'), orgId = "org", projectId = "project", messages = emptyList(), draft = true, accessTokenProvider = { token }).toList()
+                provider.streamMessage(server.url("/").toString().trimEnd('/'), orgId = "org", projectId = "project", messages = emptyList(), draft = draft, accessTokenProvider = { token }).toList()
                 val request = server.takeRequest()
                 assertEquals("Bearer $token", request.getHeader("Authorization"))
                 assertNull(request.getHeader("X-Metabind-Guest-Session"))

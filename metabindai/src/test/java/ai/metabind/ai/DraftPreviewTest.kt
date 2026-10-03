@@ -96,13 +96,13 @@ class DraftPreviewTest {
         assertEquals(count, requests.size)
     }
 
-    @Test fun guestAssistantDiscoversToolsAndLoadsCardsWithoutCredentials() = runBlocking(main) {
+    @Test fun publishedAssistantUsesLoginForToolsAndCards() = runBlocking(main) {
         val host = server.url("/").toString().trimEnd('/')
-        val chat = MetabindAssistant(orgId = "org", projectId = "project", agentHost = host, mcpHost = host)
+        val chat = MetabindAssistant(orgId = "org", projectId = "project", agentHost = host, mcpHost = host, accessTokenProvider = { "published-token" })
         assistant = chat
         chat.awaitReady()
         turn(chat)
-        assertTrue(authorizationHeaders.all { it.isEmpty() })
+        assertTrue(authorizationHeaders.all { it == "Bearer published-token" })
         assertTrue(requests.filter { !it.first.endsWith("/chat") }.all { it.first == "/org/projects/project" })
         val count = requests.size
         chat.refreshPreviewResources()

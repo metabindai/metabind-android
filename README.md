@@ -123,18 +123,15 @@ The assistant derives the MCP server URL from your org and project ids; the opti
 
 A supplied Metabind API key authenticates both the MCP server and the agent proxy.
 
-### Public chat and account tokens
+### Authenticated project chat
 
-For a public published project, omit `apiKey` when constructing
-`MetabindAssistant`. No Authorization header is sent; the Agent receives a random
-private guest-session identifier. Guest chat requires the matching Agent deployment.
-Draft and private access still requires credentials.
-
-For account sign-in, supply `accessTokenProvider = { ... }`, a suspend callback
-that returns a fresh access token. Both MCP requests and Agent turns resolve it
-when needed. The host app owns browser login, encrypted storage, and refresh.
-Anonymous drafts are rejected before network access. Never put tokens or guest
-session identifiers in shared project URLs.
+Published and draft chat both require credentials. Supply
+`accessTokenProvider = { ... }`, a suspend callback returning a fresh account
+access token. Both MCP requests and Agent turns send it as
+`Authorization: Bearer <token>`. The host owns browser sign-in, encrypted storage,
+and refresh. Missing credentials or failed refresh stop the request; there is no
+anonymous fallback. Existing `apiKey` integrations remain supported.
+Never include credentials in shared project links.
 
 ## MCPAppsHost: render a single tool result
 

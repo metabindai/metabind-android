@@ -90,7 +90,7 @@ fun DetailContent(
                 is DetailViewModel.ViewState.Project -> assistant?.let { ProjectContent(it, viewState, onDisconnect) }
                 is DetailViewModel.ViewState.SignIn -> Column(Modifier.padding(32.dp)) {
                     Text(viewState.title, style = MaterialTheme.typography.titleLarge)
-                    Text("Sign in to preview drafts")
+                    Text("Sign in to chat")
                     Text(viewState.error ?: "Use your Metabind account. You need permission to access this project.")
                     TextButton(onClick = onSignIn, enabled = !viewState.busy) {
                         Text(if (viewState.busy) "Signing in…" else "Sign in to Metabind")
@@ -160,7 +160,7 @@ private fun ProjectContent(assistant: MetabindAssistant, project: DetailViewMode
         Column(Modifier.fillMaxWidth().padding(start = 56.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
             Text(project.title, style = MaterialTheme.typography.titleMedium)
             Text("${if (project.draft) "Saved drafts" else "Published"} · ${if (project.development) "Development" else "Production"}", style = MaterialTheme.typography.labelSmall)
-            if (project.draft) TextButton(onClick = onDisconnect) { Text("Disconnect this project") }
+            TextButton(onClick = onDisconnect) { Text("Disconnect this project") }
         }
         if (refreshUnavailable) Text("Saved edit refresh is temporarily unavailable.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelSmall)
         MetabindAssistantView(assistant, Modifier.weight(1f))

@@ -1,3 +1,8 @@
+> Historical validation below predates the October 3 login-only update.
+> Published and draft chat now both require account sign-in. Guest-chat release
+> steps below are superseded; do not deploy anonymous chat for this flow.
+> Current validation is recorded in the PR description.
+
 # Android MCP login and published chat validation
 
 Validated September 18, 2026. This implementation is not released.

@@ -115,8 +115,8 @@ class MetabindAssistant(
             url = mcpServerUrl,
             headerProvider = {
                 val credential = accessTokenProvider?.invoke() ?: apiKey
-                require(!draft || credential.isNotEmpty()) { "Drafts require sign-in" }
-                if (credential.isEmpty()) emptyMap() else mapOf("Authorization" to "Bearer $credential")
+                require(credential.isNotBlank()) { "Sign in to chat" }
+                mapOf("Authorization" to "Bearer $credential")
             }
         )
         mcpClient = client

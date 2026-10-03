@@ -19,12 +19,11 @@ Only the draft MCP endpoint has `/draft`. Development uses the corresponding
 `dev.metabind.ai` and `mcp-dev.metabind.ai` hosts. Only canonical project IDs and
 trusted HTTPS endpoints are accepted.
 
-Public published projects open ready to chat without sign-in. The SDK sends a
-random, private guest-session identifier to isolate conversation history. This
-requires the shared Agent guest-chat deployment. Private projects remain protected.
-Published mode does not run draft polling.
+Published and draft projects both require **Sign in to Metabind**, unless a valid
+session is already saved. Both MCP and Agent receive the account access token in
+an Authorization bearer header. Published mode does not run draft polling.
 
-Draft links show **Sign in to Metabind**. AppAuth opens the system browser and
+AppAuth opens the system browser and
 uses authorization code flow with S256 PKCE and random state. The app validates
 discovery hosts, project, callback, and granted scopes. It refreshes access tokens
 for MCP requests and Agent turns without resetting the conversation. OAuth state
@@ -56,14 +55,14 @@ debug and release callback schemes are separate.
 Keystore instrumentation checks persistence, environment isolation, ciphertext,
 and tamper rejection. Sign-in checks cover credential-free draft entry, activity
 recreation, PKCE/state generation, and rejection of a mismatched OAuth response.
-SDK tests cover anonymous discovery/chat/card loading, guest-session isolation,
-anonymous draft rejection, token rotation for both MCP and Agent, and draft refresh.
+SDK tests cover authenticated discovery/chat/card loading, rejected signed-out
+requests, token rotation for both MCP and Agent, and draft refresh.
 
 The opt-in live Finance test requires `mcp-preview-test-link` in the app's cache
 and a previously completed draft login. It checks a production draft and deletes
 the input after import. Published chat is tested separately. Physical camera scanning, real account
-login/refresh/revocation, deployed Studio links, and live guest chat require end-to-end
-validation. Local fixtures are not proof that deployed services support guest chat.
+login/refresh/revocation, deployed Studio links, and published account chat require end-to-end
+validation. Local fixtures do not replace live account testing.
 
 ## Architecture
 

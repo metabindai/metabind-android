@@ -20,14 +20,18 @@ class PreviewSignInTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val link = "https://mcp.metabind.ai/00000000000000000000/projects/11111111111111111111/draft"
 
-    @Test fun credentialFreeDraftOpensSignInAndSurvivesRecreation() {
+    @Test fun credentialFreeDraftOpensSignInAndSurvivesRecreation() = assertSignIn(link)
+
+    @Test fun credentialFreePublishedOpensSignInAndSurvivesRecreation() = assertSignIn(link.removeSuffix("/draft"))
+
+    private fun assertSignIn(link: String) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         PreviewCredentials(context).remove(MCPPreviewLink.parse(link)!!)
         compose.onNodeWithContentDescription("Preview").performClick()
         compose.onNodeWithText("Preview URL").performTextInput(link)
         compose.onNodeWithText("Open Preview").performClick()
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Sign in to Metabind").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Sign in to preview drafts").assertExists()
+        compose.onNodeWithText("Sign in to chat").assertExists()
         compose.activityRule.scenario.recreate()
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Sign in to Metabind").fetchSemanticsNodes().isNotEmpty() }
     }
@@ -55,7 +59,7 @@ class PreviewSignInTest {
     @Test fun encryptedOAuthSessionReopensAndDisconnectRemovesAccess() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val credentials = PreviewCredentials(context)
-        val project = MCPPreviewLink.parse(link)!!
+        val project = MCPPreviewLink.parse(link.removeSuffix("/draft"))!!
         val config = AuthorizationServiceConfiguration(Uri.parse("https://www.metabind.ai/oauth/authorize"), Uri.parse("https://api.metabind.ai/oauth/token"))
         val request = AuthorizationRequest.Builder(config, "test-client", ResponseTypeValues.CODE, Uri.parse("${context.packageName}.oauth://callback"))
             .setScope("read:types read:packages read:assets execute:mcp execute:mcp-draft offline_access")

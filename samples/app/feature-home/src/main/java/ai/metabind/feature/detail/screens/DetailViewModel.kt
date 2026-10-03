@@ -63,7 +63,7 @@ class DetailViewModel @Inject constructor(
                     updateState(ViewState.Success(contentId = item.token))
                 } else {
                     this@DetailViewModel.project = project
-                    if (project.isDraft && !oauth.hasSession(project)) {
+                    if (!oauth.hasSession(project)) {
                         updateState(ViewState.SignIn(project.title))
                     } else openProject(project)
                 }
@@ -81,19 +81,17 @@ class DetailViewModel @Inject constructor(
 
     private suspend fun openProject(project: MCPPreviewLink) {
         assistant?.close()
-        val tokenProvider: (suspend () -> String)? = if (project.isDraft) {
-            {
-                try { oauth.accessToken(project) }
-                catch (error: PreviewOAuth.SignInRequired) {
-                    viewModelScope.launch {
-                        assistant?.close()
-                        assistant = null
-                        updateState(ViewState.SignIn(project.title))
-                    }
-                    throw error
+        val tokenProvider: suspend () -> String = {
+            try { oauth.accessToken(project) }
+            catch (error: PreviewOAuth.SignInRequired) {
+                viewModelScope.launch {
+                    assistant?.close()
+                    assistant = null
+                    updateState(ViewState.SignIn(project.title))
                 }
+                throw error
             }
-        } else null
+        }
         val chat = MetabindAssistant(orgId = project.organizationId,
             projectId = project.projectId, mcpHost = project.mcpHost, draft = project.isDraft,
             agentHost = if (project.isDevelopment) MetabindAgentProvider.DEVELOPMENT_HOST else MetabindAgentProvider.PRODUCTION_HOST,

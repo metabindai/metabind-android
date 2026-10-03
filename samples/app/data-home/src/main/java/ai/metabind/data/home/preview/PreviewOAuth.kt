@@ -38,14 +38,13 @@ class PreviewOAuth @Inject constructor(
         .callTimeout(30, TimeUnit.SECONDS).build()
     private val mutex = Mutex()
 
-    class SignInRequired : Exception("Sign in to Metabind to access this project's drafts.")
+    class SignInRequired : Exception("Sign in to Metabind to access this project.")
 
     suspend fun hasSession(project: MCPPreviewLink): Boolean = withContext(Dispatchers.IO) {
         credentials.load(project) != null
     }
 
     suspend fun authorizationIntent(project: MCPPreviewLink): Intent = withContext(Dispatchers.IO) {
-        require(project.isDraft)
         val metadata = json(Request.Builder().url(
             project.serverUrl.removeSuffix("/draft") + "/.well-known/oauth-authorization-server"
         ).build())
@@ -73,7 +72,7 @@ class PreviewOAuth @Inject constructor(
         if (data == null || AuthorizationException.fromIntent(data) != null) throw SignInRequired()
         val response = AuthorizationResponse.fromIntent(data) ?: throw SignInRequired()
         val request = response.request
-        require(project.isDraft && request.redirectUri == callback && request.responseType == ResponseTypeValues.CODE)
+        require(request.redirectUri == callback && request.responseType == ResponseTypeValues.CODE)
         require(request.additionalParameters["project_id"] == project.projectId)
         require(!request.state.isNullOrBlank() && request.state == response.state)
         require(!request.codeVerifier.isNullOrBlank() && request.codeVerifierChallengeMethod == "S256")
@@ -96,7 +95,6 @@ class PreviewOAuth @Inject constructor(
 
     /** Resolve a fresh token for every MCP request and Agent turn, without resetting chat. */
     suspend fun accessToken(project: MCPPreviewLink): String = mutex.withLock {
-        require(project.isDraft)
         val encoded = withContext(Dispatchers.IO) { credentials.load(project) } ?: throw SignInRequired()
         val state = try { AuthState.jsonDeserialize(encoded) } catch (_: Exception) { throw SignInRequired() }
         validateConfiguration(project, state.authorizationServiceConfiguration ?: throw SignInRequired())

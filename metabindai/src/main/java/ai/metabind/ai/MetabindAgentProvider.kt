@@ -36,9 +36,9 @@ import java.util.concurrent.TimeUnit
  * The proxy holds upstream LLM credentials server-side, fetches the project's
  * published MCP tools, runs the tool-call loop, and streams normalized events
  * back over SSE. Authenticated clients supply a key or fresh account token;
- * public published chat can omit credentials when supported by the Agent.
+ * published and draft chat both require authentication.
  */
-class MetabindAgentProvider(val guestSessionId: String = java.util.UUID.randomUUID().toString()) {
+class MetabindAgentProvider {
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -73,7 +73,7 @@ class MetabindAgentProvider(val guestSessionId: String = java.util.UUID.randomUU
     ): Flow<LLMStreamEvent> = callbackFlow {
         try {
             val credential = accessTokenProvider?.invoke() ?: apiKey
-            require(!draft || credential.isNotEmpty()) { "Drafts require sign-in" }
+            require(credential.isNotBlank()) { "Sign in to chat" }
             val url = "$baseUrl/$orgId/$projectId/chat"
 
             val scopedMessages = scopedMessages(messages)
@@ -92,10 +92,7 @@ class MetabindAgentProvider(val guestSessionId: String = java.util.UUID.randomUU
 
             val request = Request.Builder()
                 .url(url)
-                .apply {
-                    if (credential.isNotEmpty()) addHeader("Authorization", "Bearer $credential")
-                    else addHeader("X-Metabind-Guest-Session", guestSessionId)
-                }
+                .addHeader("Authorization", "Bearer $credential")
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Accept", "text/event-stream")
                 .post(requestBody)
