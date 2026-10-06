@@ -35,7 +35,8 @@ import java.util.concurrent.TimeUnit
  *
  * The proxy holds upstream LLM credentials server-side, fetches the project's
  * published MCP tools, runs the tool-call loop, and streams normalized events
- * back over SSE. Clients authenticate with a project-scoped Metabind API key.
+ * back over SSE. Authenticated clients supply a key or fresh account token;
+ * published and draft chat both require authentication.
  */
 class MetabindAgentProvider {
 
@@ -63,12 +64,16 @@ class MetabindAgentProvider {
 
     fun streamMessage(
         baseUrl: String,
-        apiKey: String,
+        apiKey: String = "",
         orgId: String,
         projectId: String,
-        messages: List<LLMMessage>
+        messages: List<LLMMessage>,
+        draft: Boolean = false,
+        accessTokenProvider: (suspend () -> String)? = null,
     ): Flow<LLMStreamEvent> = callbackFlow {
         try {
+            val credential = accessTokenProvider?.invoke() ?: apiKey
+            require(credential.isNotBlank()) { "Sign in to chat" }
             val url = "$baseUrl/$orgId/$projectId/chat"
 
             val scopedMessages = scopedMessages(messages)
@@ -77,6 +82,7 @@ class MetabindAgentProvider {
                 "messages" to scopedMessages,
                 "stream" to JsonPrimitive(true)
             )
+            if (draft) bodyMap["draft"] = JsonPrimitive(true)
             conversationId?.let {
                 bodyMap["conversationId"] = JsonPrimitive(it)
             }
@@ -86,7 +92,7 @@ class MetabindAgentProvider {
 
             val request = Request.Builder()
                 .url(url)
-                .addHeader("Authorization", "Bearer $apiKey")
+                .addHeader("Authorization", "Bearer $credential")
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Accept", "text/event-stream")
                 .post(requestBody)

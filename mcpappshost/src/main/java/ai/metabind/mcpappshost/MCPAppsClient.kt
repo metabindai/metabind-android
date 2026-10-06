@@ -30,7 +30,8 @@ class MCPAppsClient(
     private val url: String,
     private val headers: Map<String, String> = emptyMap(),
     private val maxRetries: Int = 2,
-    requestTimeoutSeconds: Long = 30
+    requestTimeoutSeconds: Long = 30,
+    private val headerProvider: (suspend () -> Map<String, String>)? = null,
 ) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(requestTimeoutSeconds, TimeUnit.SECONDS)
@@ -222,8 +223,8 @@ class MCPAppsClient(
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json, text/event-stream")
 
-        headers.forEach { (key, value) ->
-            requestBuilder.addHeader(key, value)
+        (headers + (headerProvider?.invoke() ?: emptyMap())).forEach { (key, value) ->
+            requestBuilder.header(key, value)
         }
 
         sessionId?.let {
@@ -325,8 +326,8 @@ class MCPAppsClient(
             .addHeader("Content-Type", "application/json")
             .addHeader("Accept", "application/json, text/event-stream")
 
-        headers.forEach { (key, value) ->
-            requestBuilder.addHeader(key, value)
+        (headers + (headerProvider?.invoke() ?: emptyMap())).forEach { (key, value) ->
+            requestBuilder.header(key, value)
         }
 
         sessionId?.let {

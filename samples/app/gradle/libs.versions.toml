@@ -75,6 +75,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 metabind = { group = "ai.metabind", name = "metabind-content-android", version.ref = "metabind" }
 
+metabind-ai = { group = "ai.metabind", name = "metabindai-android", version.ref = "metabind" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

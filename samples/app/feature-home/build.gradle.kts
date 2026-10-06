@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
     implementation(libs.metabind)
+    implementation(libs.metabind.ai)
     implementation(libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.javascriptengine)
