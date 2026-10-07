@@ -9,6 +9,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -88,6 +91,7 @@ fun MetabindAssistantView(
     var inputText by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
     val scrollScope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
 
     val sendAndScroll: (String) -> Unit = remember(assistant, listState, scrollScope) {
         { text ->
@@ -130,6 +134,9 @@ fun MetabindAssistantView(
           modifier = Modifier
               .weight(1f)
               .fillMaxWidth()
+              // A tap on the conversation dismisses the keyboard. Taps a card's
+              // button handles, and scroll drags, are consumed before they get here.
+              .pointerInput(focusManager) { detectTapGestures { focusManager.clearFocus() } }
       ) {
         LazyColumn(
             state = listState,
