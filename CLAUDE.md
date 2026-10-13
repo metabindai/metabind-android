@@ -49,7 +49,7 @@ cd samples/finance-demo   && ./gradlew :app:assembleDebug
 
 ## Build Configuration
 
-- Gradle 9.4 (AGP 9.0.1) with Kotlin DSL, version catalog at `gradle/libs.versions.toml`
+- Kotlin DSL. Gradle version: `gradle/wrapper/gradle-wrapper.properties`. AGP, Kotlin and library versions: the version catalog `gradle/libs.versions.toml` (AGP must match bindjs-android; see the comment there).
 - Compile SDK 36, Min SDK 26, Java 21
 - Apollo GraphQL code generation: schemas in `metabind-content/src/main/graphql/`, generated code in `metabind-content/build/generated/`
 
