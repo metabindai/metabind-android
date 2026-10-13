@@ -123,17 +123,7 @@ The assistant derives the MCP server URL from your org and project ids; the opti
 > [!NOTE]
 > Retain the `MetabindAssistant` instance at an appropriate scope — inside a ViewModel, for example — and call `close()` when you discard it. The Android SDK is Agent-proxy only: there's no bring-your-own-key provider, so no LLM credential ever ships in your APK.
 
-A supplied Metabind API key authenticates both the MCP server and the agent proxy.
-
-### Authenticated project chat
-
-Published and draft chat both require credentials. Supply
-`accessTokenProvider = { ... }`, a suspend callback returning a fresh account
-access token. Both MCP requests and Agent turns send it as
-`Authorization: Bearer <token>`. The host owns browser sign-in, encrypted storage,
-and refresh. Missing credentials or failed refresh stop the request; there is no
-anonymous fallback. Existing `apiKey` integrations remain supported.
-Never include credentials in shared project links.
+Your Metabind API key authenticates both the MCP server and the agent proxy.
 
 ## MCPAppsHost: render a single tool result
 
@@ -231,25 +221,15 @@ GraphQL schema and operations for the content module live in
 `metabind-content/src/main/graphql/`; Apollo generates the client into
 `metabind-content/build/generated/`.
 
+## Unreleased APIs on `main`
+
+These APIs are on `main` but not in any published version, including 0.2.12. You can use them only by building the SDK from source, as the samples in this repository do with `includeBuild("../..")`.
+
+- **Account access tokens.** `MetabindAssistant(accessTokenProvider = { ... })` takes a suspend callback that returns a fresh Metabind account access token. MCP requests and Agent turns send it as `Authorization: Bearer <token>`. Your app owns browser sign-in, encrypted storage, and refresh. With a provider, `apiKey` is optional. Without either credential, the assistant refuses to connect. There is no anonymous chat.
+- **Draft previews.** `MetabindAssistant(draft = true)` uses the project's draft MCP endpoint and requests the project's saved draft configuration from the Agent proxy. `awaitReady()` checks MCP access before you show the chat, without sending a message or running a tool. `refreshPreviewResources()` refreshes tool definitions and existing UI resources between turns, without replaying tool calls.
+
+The `samples/app` preview host uses both to open projects from a QR code or link. See its README for the link format and local test workflow.
+
 ## License
 
 Apache License 2.0. See [`LICENSE`](LICENSE).
-
-
-## Saved-draft assistant previews
-
-Pass `draft = true` to `MetabindAssistant` to use the MCP draft endpoint and request
-saved draft configuration from the Agent service. The default remains published
-mode. Preview hosts can call `awaitReady()` before showing chat to validate MCP
-access without sending a message or executing a tool.
-
-Call `refreshPreviewResources()` from a lifecycle-aware coroutine while the host
-is resumed (the preview sample uses a three-second interval). It refreshes tool
-definitions and existing UI resources between turns while preserving messages,
-tool arguments, results, and the conversation. Identical resources do not recreate
-cards, and an intervening turn or reset discards stale refresh results. Refresh
-never replays tool calls. `close()` releases the assistant when its host is removed.
-
-The `samples/app` preview host supports importing scoped access from a QR or URL,
-secure local credential storage, and reopening saved projects. See its README
-for the link format and local test workflow.
