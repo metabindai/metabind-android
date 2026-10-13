@@ -15,7 +15,7 @@ No LLM provider keys ship in the binary — the Metabind Agent proxy holds the u
 
 ## Requirements
 
-- Android Studio Narwhal+ (AGP 9.0.1, Kotlin 2.2.10)
+- Android Studio Quail 2 (2026.1.2) or later. The sample builds with AGP 9.3.1 and Kotlin 2.3.10.
 - `compileSdk` 36, `minSdk` 26
 - A Metabind project API key — create one at [metabind.ai](https://metabind.ai)
 - A GitHub personal access token with `read:packages` scope (to fetch the SDK from GitHub Packages)
