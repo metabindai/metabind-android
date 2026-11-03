@@ -32,6 +32,8 @@ class MCPAppsClient(
     private val maxRetries: Int = 2,
     requestTimeoutSeconds: Long = 30,
     private val headerProvider: (suspend () -> Map<String, String>)? = null,
+    /** View content types declared at `initialize`. The server picks one representation per session from these. */
+    private val mimeTypes: List<String> = DEFAULT_MIME_TYPES,
 ) {
     private val client = OkHttpClient.Builder()
         .connectTimeout(requestTimeoutSeconds, TimeUnit.SECONDS)
@@ -47,10 +49,17 @@ class MCPAppsClient(
 
     companion object {
         private val SUPPORTED_VERSIONS = listOf("2025-03-26", "2024-11-05")
-        private val SUPPORTED_MIME_TYPES = listOf(
-            "application/vnd.bindjs+json",
-            "text/html;profile=mcp-app"
-        )
+        /** The BindJS View type of the MCP Apps binding (bindjs/bindings/mcp-apps.md). Resources carry it bare. */
+        const val BINDJS_VIEW_MIME_TYPE = "application/bindjs+json"
+        const val BINDJS_PACKAGE_MIME_TYPE = "application/bindjs-package+json"
+        /** The pre-specification type: a bundle with the package inline. */
+        const val LEGACY_BINDJS_MIME_TYPE = "application/vnd.bindjs+json"
+        const val HTML_MIME_TYPE = "text/html;profile=mcp-app"
+
+        /** The highest BindJS minor this host implements, for each major it renders (binding section 6). */
+        const val BINDJS_VIEW_DECLARATION = "$BINDJS_VIEW_MIME_TYPE;version=1.0"
+
+        val DEFAULT_MIME_TYPES = listOf(LEGACY_BINDJS_MIME_TYPE, HTML_MIME_TYPE)
         private const val CLIENT_NAME = "MCPAppsHost"
         private const val CLIENT_VERSION = "1.0.0"
         private val RETRYABLE_CODES = setOf(500, 502, 503, 504)
@@ -70,7 +79,7 @@ class MCPAppsClient(
             "capabilities" to JsonObject(mapOf(
                 "extensions" to JsonObject(mapOf(
                     "io.modelcontextprotocol/ui" to JsonObject(mapOf(
-                        "mimeTypes" to JsonArray(SUPPORTED_MIME_TYPES.map { JsonPrimitive(it) })
+                        "mimeTypes" to JsonArray(mimeTypes.map { JsonPrimitive(it) })
                     ))
                 ))
             )),
@@ -167,8 +176,42 @@ class MCPAppsClient(
             uri = first["uri"]?.jsonPrimitive?.content ?: uri,
             mimeType = first["mimeType"]?.jsonPrimitive?.content ?: "text/plain",
             text = first["text"]?.jsonPrimitive?.content,
-            blob = first["blob"]?.jsonPrimitive?.content
+            blob = first["blob"]?.jsonPrimitive?.content,
+            meta = first["_meta"] as? JsonObject
         )
+    }
+
+    suspend fun listResources(): List<ResourceDescriptor> {
+        ensureInitialized()
+
+        val all = mutableListOf<ResourceDescriptor>()
+        var cursor: String? = null
+
+        do {
+            val params = if (cursor != null) {
+                JsonObject(mapOf("cursor" to JsonPrimitive(cursor)))
+            } else {
+                JsonObject(emptyMap())
+            }
+
+            val result = sendRequest("resources/list", params)
+            val resources = result["resources"]?.jsonArray ?: break
+
+            for (resourceJson in resources) {
+                val resource = resourceJson.jsonObject
+                val uri = resource["uri"]?.jsonPrimitive?.content ?: continue
+                all.add(ResourceDescriptor(
+                    uri = uri,
+                    name = resource["name"]?.jsonPrimitive?.content,
+                    mimeType = resource["mimeType"]?.jsonPrimitive?.content,
+                    meta = resource["_meta"] as? JsonObject
+                ))
+            }
+
+            cursor = result["nextCursor"]?.jsonPrimitive?.content
+        } while (cursor != null)
+
+        return all
     }
 
     private fun parseToolResult(resultObj: JsonObject): ToolResult {
