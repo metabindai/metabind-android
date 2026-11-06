@@ -32,6 +32,7 @@ class HomeViewModel @Inject constructor(
                 orgId = BuildConfig.METABIND_ORG_ID,
                 projectId = BuildConfig.METABIND_PROJECT_ID,
                 agentHost = BuildConfig.METABIND_AGENT_HOST,
+                mcpHost = BuildConfig.METABIND_MCP_HOST,
             )
         }
     }

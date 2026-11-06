@@ -5,6 +5,7 @@
  */
 package ai.metabind.ai
 
+import ai.metabind.mcpappshost.BindJSViewLoader
 import ai.metabind.mcpappshost.LLMMessage
 import ai.metabind.mcpappshost.LLMStreamEvent
 import ai.metabind.mcpappshost.LLMToolCall
@@ -81,6 +82,26 @@ class MetabindAssistant(
     private val mcpServerUrl = "$mcpHost/$orgId/projects/$projectId" + if (draft) "/draft" else ""
 
     private var mcpClient: MCPAppsClient? = null
+    private var viewLoader: BindJSViewLoader? = null
+
+    private val authorizationHeaders: suspend () -> Map<String, String> = {
+        val credential = accessTokenProvider?.invoke() ?: apiKey
+        require(credential.isNotBlank()) { "Sign in to chat" }
+        mapOf("Authorization" to "Bearer $credential")
+    }
+
+    /**
+     * A session that declares HTML only, opened the first time a BindJS View can't be
+     * run. The server picks one representation per session, so the main session never
+     * hands out the HTML of a View it served as BindJS.
+     */
+    private val htmlClient by lazy {
+        MCPAppsClient(
+            url = mcpServerUrl,
+            headerProvider = authorizationHeaders,
+            mimeTypes = listOf(MCPAppsClient.HTML_MIME_TYPE)
+        )
+    }
     private var toolUIMap: Map<String, String> = emptyMap()
     private var llmHistory: MutableList<LLMMessage> = mutableListOf()
     private val pendingContext: MutableMap<String, JsonElement> = linkedMapOf()
@@ -113,13 +134,11 @@ class MetabindAssistant(
     private suspend fun initMCPClient() {
         val client = MCPAppsClient(
             url = mcpServerUrl,
-            headerProvider = {
-                val credential = accessTokenProvider?.invoke() ?: apiKey
-                require(credential.isNotBlank()) { "Sign in to chat" }
-                mapOf("Authorization" to "Bearer $credential")
-            }
+            headerProvider = authorizationHeaders,
+            mimeTypes = listOf(MCPAppsClient.BINDJS_VIEW_DECLARATION) + MCPAppsClient.DEFAULT_MIME_TYPES
         )
         mcpClient = client
+        viewLoader = BindJSViewLoader(client)
         try {
             val tools = client.listTools()
             toolUIMap = tools
@@ -163,7 +182,7 @@ class MetabindAssistant(
                 val resource = resources[uri] ?: client.readResource(uri).also { resources[uri] = it }
                 if (obsolete()) return@withLock
                 if (resourceSnapshots[message.id] == resource) continue
-                var content = ToolUIContent.fromResource(resource, toolInputs[message.id])
+                var content = toolUIContent(resource, toolInputs[message.id])
                 if (message.toolStatus != ToolStatus.LOADING) {
                     content = content.withResult(message.content, message.toolStatus == ToolStatus.ERROR)
                 }
@@ -337,7 +356,7 @@ class MetabindAssistant(
             try {
                 val client = mcpClient ?: return@launch
                 val resource = client.readResource(resourceUri)
-                var content = ToolUIContent.fromResource(resource, toolArguments)
+                var content = toolUIContent(resource, toolArguments)
                 val message = _messages.value.find { it.id == toolCallId }
                 if (message != null && message.toolStatus != ToolStatus.LOADING) {
                     content = content.withResult(message.content, message.toolStatus == ToolStatus.ERROR)
@@ -352,6 +371,27 @@ class MetabindAssistant(
             }
         }
         trackUIContentJob(job)
+    }
+
+    /**
+     * A BindJS View runs from its verified package. One that can't — unsupported
+     * version, failed integrity check, package unreachable — is shown as HTML instead.
+     */
+    private suspend fun toolUIContent(resource: ResourceContent, toolArguments: JsonElement?): ToolUIContent {
+        val loader = viewLoader
+        if (loader == null || !BindJSViewLoader.isView(resource.mimeType)) {
+            return ToolUIContent.fromResource(resource, toolArguments)
+        }
+        return try {
+            ToolUIContent.fromBindJSView(loader.load(resource), toolArguments)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Not running BindJS View ${resource.uri} (${e.message}); showing its HTML")
+            val html = htmlClient.readResource(resource.uri)
+            check(html.mimeType.contains("html")) { "No HTML representation of ${resource.uri}" }
+            ToolUIContent.fromResource(html, toolArguments)
+        }
     }
 
     private fun trackUIContentJob(job: Job) {

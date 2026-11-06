@@ -6,6 +6,8 @@
 package ai.metabind.ai
 
 import ai.metabind.bindjs.DesignerComponent
+import ai.metabind.mcpappshost.BindJSView
+import ai.metabind.mcpappshost.BindJSViewLoader
 import ai.metabind.mcpappshost.ResourceContent
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
@@ -48,6 +50,8 @@ sealed class ToolUIContent {
     companion object {
         /**
          * Create the appropriate content type from an MCP resource based on its mimeType.
+         * A BindJS View (`application/bindjs+json`) carries no code: resolve its package
+         * with [BindJSViewLoader] and pass the result to [fromBindJSView].
          */
         fun fromResource(
             resource: ResourceContent,
@@ -57,6 +61,9 @@ sealed class ToolUIContent {
                 ?: throw IllegalStateException("Empty resource content")
 
             return when {
+                BindJSViewLoader.isView(resource.mimeType) -> {
+                    throw IllegalArgumentException("BindJS View ${resource.uri} needs its package resolved; use fromBindJSView")
+                }
                 resource.mimeType.contains("bindjs") || resource.mimeType == "application/json" -> {
                     parseBindJSBundle(text, toolArguments)
                 }
@@ -67,6 +74,25 @@ sealed class ToolUIContent {
                     throw IllegalStateException("Unsupported resource mimeType: ${resource.mimeType}")
                 }
             }
+        }
+
+        /**
+         * Content for a View read on the BindJS View channel. Its entry component is the
+         * root; every other component of its package registers as a dependency.
+         */
+        fun fromBindJSView(view: BindJSView, toolArguments: JsonElement? = null): BindJS {
+            val designerComponent = DesignerComponent(
+                name = view.component,
+                content = view.components.getValue(view.component),
+                dependencies = view.components
+                    .filter { it.key != view.component }
+                    .map { (name, js) -> DesignerComponent(name = name, content = js) }
+            )
+            return BindJS(
+                designerComponent = designerComponent,
+                layoutComponentName = view.component,
+                toolArguments = toolArguments
+            )
         }
 
         /**

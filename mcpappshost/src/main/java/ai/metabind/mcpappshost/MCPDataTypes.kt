@@ -6,6 +6,7 @@
 package ai.metabind.mcpappshost
 
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 data class MCPToolDefinition(
     val name: String,
@@ -45,5 +46,15 @@ data class ResourceContent(
     val uri: String,
     val mimeType: String,
     val text: String? = null,
-    val blob: String? = null
+    val blob: String? = null,
+    /** The content item's `_meta`, e.g. `_meta.ui.bindjs` on a BindJS View or package. */
+    val meta: JsonObject? = null
+)
+
+/** An entry of `resources/list`. */
+data class ResourceDescriptor(
+    val uri: String,
+    val name: String? = null,
+    val mimeType: String? = null,
+    val meta: JsonObject? = null
 )
