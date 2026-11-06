@@ -10,7 +10,9 @@ import okhttp3.tls.HeldCertificate
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.security.MessageDigest
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -26,6 +28,9 @@ class BindJSViewLoaderTest {
     private val packages = java.util.concurrent.ConcurrentHashMap<String, String>()
     @Volatile private var cdnBody: ((String) -> String?)? = null
     @Volatile private var readBody: ((String) -> String?)? = null
+    @Volatile private var cacheControl: String? = null
+    private val conditionalHits = CopyOnWriteArrayList<String>()
+    @get:Rule val folder = TemporaryFolder()
     private lateinit var client: MCPAppsClient
     private lateinit var loader: BindJSViewLoader
 
@@ -64,7 +69,11 @@ class BindJSViewLoaderTest {
                 cdnHits.add(path)
                 val uri = "ui://" + path.removePrefix("/cdn/")
                 val body = cdnBody?.invoke(uri) ?: packages[uri] ?: return MockResponse().setResponseCode(404)
-                return MockResponse().setBody(body)
+                val etag = "\"${sha256(body)}\""
+                request.getHeader("If-None-Match")?.let { conditionalHits.add(path) }
+                val response = if (request.getHeader("If-None-Match") == etag) MockResponse().setResponseCode(304)
+                    else MockResponse().setBody(body)
+                return response.setHeader("ETag", etag).apply { cacheControl?.let { setHeader("Cache-Control", it) } }
             }
         }
         cdn.start()
@@ -119,24 +128,97 @@ class BindJSViewLoaderTest {
         assertFalse("resources/read" in methods)
     }
 
-    @Test fun aCachedPackageIsNeitherDownloadedNorDecodedAgain() = runBlocking {
+    /** A package client caching on disk like [BindJSPackageHttp.client], trusting the test CDN. */
+    private fun cachingHttp() = BindJSPackageHttp.newClient(folder.root.resolve("http"), cdnHttp.newBuilder())
+
+    @Test fun aFreshPackageIsNeitherDownloadedNorDecodedAgain() = runBlocking {
+        cacheControl = "public, max-age=31536000, immutable"
         val cache = BindJSPackageCache()
-        val loader = BindJSViewLoader(client, cache, cdnHttp)
+        val loader = BindJSViewLoader(client, cache, cachingHttp())
         loader.load(view("Layout", "ui://pkg/shop"))
         val decoded = cache[sha256(packages.getValue("ui://pkg/shop"))]
         assertNotNull(decoded)
-        val requestsAfterFirst = server.requestCount + cdn.requestCount
 
         // A second View on the same package, and a new session sharing the cache.
         val card = loader.load(view("Card", "ui://pkg/shop"))
-        BindJSViewLoader(MCPAppsClient(server.url("/mcp").toString()), cache, cdnHttp).load(view("Layout", "ui://pkg/shop"))
+        BindJSViewLoader(MCPAppsClient(server.url("/mcp").toString()), cache, cachingHttp()).load(view("Layout", "ui://pkg/shop"))
 
         assertEquals("Card", card.component)
-        assertEquals(requestsAfterFirst, server.requestCount + cdn.requestCount)
+        assertEquals(1, cdnHits.size)
         assertSame(decoded, cache[sha256(packages.getValue("ui://pkg/shop"))])
     }
 
+    @Test fun aFreshPackageOutlivesTheProcess() = runBlocking {
+        cacheControl = "public, max-age=31536000, immutable"
+        BindJSViewLoader(client, BindJSPackageCache(), cachingHttp()).load(view("Layout", "ui://pkg/shop"))
+        // A restart: nothing decoded, a new client over the same disk cache.
+        val view = BindJSViewLoader(MCPAppsClient(server.url("/mcp").toString()), BindJSPackageCache(), cachingHttp())
+            .load(view("Layout", "ui://pkg/shop"))
+        assertEquals("layout()", view.components["Layout"])
+        assertEquals(1, cdnHits.size)
+        assertFalse("resources/read" in methods)
+    }
+
+    @Test fun aStalePackageIsRevalidatedAndNotDecodedAgain() = runBlocking {
+        cacheControl = "no-cache"
+        val cache = BindJSPackageCache()
+        val loader = BindJSViewLoader(client, cache, cachingHttp())
+        loader.load(view("Layout", "ui://pkg/shop"))
+        val decoded = cache[sha256(packages.getValue("ui://pkg/shop"))]
+        loader.load(view("Card", "ui://pkg/shop"))
+        assertEquals(2, cdnHits.size)
+        assertEquals(1, conditionalHits.size)
+        assertSame(decoded, cache[sha256(packages.getValue("ui://pkg/shop"))])
+    }
+
+    @Test fun aNoStorePackageIsNeitherKeptOnDiskNorDecodedCopyKept() = runBlocking {
+        cacheControl = "no-store"
+        val cache = BindJSPackageCache()
+        val loader = BindJSViewLoader(client, cache, cachingHttp())
+        loader.load(view("Layout", "ui://pkg/shop"))
+        loader.load(view("Card", "ui://pkg/shop"))
+        assertEquals(2, cdnHits.size)
+        assertTrue(conditionalHits.isEmpty())
+        assertNull(cache[sha256(packages.getValue("ui://pkg/shop"))])
+    }
+
+    @Test fun aHeldPackageFailingANewDigestIsReadOverMcp() = runBlocking {
+        cacheControl = "public, max-age=31536000, immutable"
+        val loader = BindJSViewLoader(client, BindJSPackageCache(), cachingHttp())
+        loader.load(view("Layout", "ui://pkg/shop"))
+        // The server moved on; the disk still holds the old package, which no longer verifies.
+        packages["ui://pkg/shop"] = pkg("com.shop.ui", mapOf("Layout" to "layout2()"))
+        cdnBody = { """{"name":"com.shop.ui","version":"1.0.0","spec":"1.0","components":{"Card":"card()","Layout":"layout()"}}""" }
+        assertEquals("layout2()", loader.load(view("Layout", "ui://pkg/shop")).components["Layout"])
+        assertTrue("resources/read" in methods)
+    }
+
+    @Test fun aRedirectOffHttpsIsNotFollowed() = runBlocking {
+        val plain = MockWebServer().apply { start() }
+        try {
+            cdn.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    cdnHits.add(request.path!!)
+                    return MockResponse().setResponseCode(302).setHeader("Location", plain.url("/package").toString())
+                }
+            }
+            plain.enqueue(MockResponse().setBody(packages.getValue("ui://pkg/shop")))
+            plain.enqueue(MockResponse().setBody(packages.getValue("ui://pkg/shop")))
+            // The package client refuses the redirect; a client that follows it is caught by the loader.
+            for (http in listOf(cachingHttp(), cdnHttp)) {
+                methods.clear()
+                assertEquals("layout()", BindJSViewLoader(client, BindJSPackageCache(), http).load(view("Layout", "ui://pkg/shop")).components["Layout"])
+                assertTrue("resources/read" in methods)
+            }
+            assertEquals(1, plain.requestCount)
+        } finally {
+            plain.shutdown()
+        }
+    }
+
     @Test fun viewsOpeningTogetherFetchTheirPackageOnce() = runBlocking {
+        cacheControl = "public, max-age=60"
+        val loader = BindJSViewLoader(client, BindJSPackageCache(), cachingHttp())
         val first = async { loader.load(view("Layout", "ui://pkg/shop")) }
         val second = async { loader.load(view("Card", "ui://pkg/shop")) }
         first.await(); second.await()

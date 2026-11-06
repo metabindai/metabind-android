@@ -49,10 +49,12 @@ data class BindJSView(
 class BindJSViewException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
- * Verified packages keyed by SHA-256. A package's name and version are immutable, so
- * the digest the server states on a View is enough to know the package is already
- * here: a hit is neither downloaded nor decoded again. Entries were verified before
- * they went in. Shared by every loader in the process unless one is given its own.
+ * Decoded packages keyed by SHA-256, so verified bytes are decoded once. Entries were
+ * verified before they went in. A package with a `contentUrl` is still fetched through
+ * [BindJSPackageHttp] on every load, so HTTP freshness decides whether it is current;
+ * this cache only saves decoding it. One read over MCP has no such rules, so for it the
+ * digest the server states on a View is enough to skip the read. Shared by every loader
+ * in the process unless one is given its own.
  */
 class BindJSPackageCache(private val capacity: Int = 32) {
     private val entries = object : LinkedHashMap<String, BindJSPackage>(16, 0.75f, true) {
@@ -62,14 +64,23 @@ class BindJSPackageCache(private val capacity: Int = 32) {
 
     operator fun get(sha256: String): BindJSPackage? = synchronized(entries) { entries[sha256.lowercase()] }
 
+    internal operator fun set(sha256: String, pkg: BindJSPackage) {
+        synchronized(entries) { entries[sha256.lowercase()] = pkg }
+    }
+
+    internal fun remove(sha256: String) {
+        synchronized(entries) { entries.remove(sha256.lowercase()) }
+    }
+
+    /** Drops every decoded package. The HTTP disk cache is left as it is. */
+    fun clear() {
+        synchronized(entries) { entries.clear() }
+    }
+
     /** One load per digest at a time: two Views opening on the same package fetch it once. */
-    internal suspend fun getOrLoad(sha256: String, load: suspend () -> BindJSPackage): BindJSPackage {
-        val key = sha256.lowercase()
-        get(key)?.let { return it }
-        val lock = synchronized(locks) { locks.getOrPut(key) { Mutex() } }
-        return lock.withLock {
-            get(key) ?: load().also { synchronized(entries) { entries[key] = it } }
-        }
+    internal suspend fun <T> withLock(sha256: String, block: suspend () -> T): T {
+        val lock = synchronized(locks) { locks.getOrPut(sha256.lowercase()) { Mutex() } }
+        return lock.withLock { block() }
     }
 
     companion object {
@@ -79,15 +90,15 @@ class BindJSPackageCache(private val capacity: Int = 32) {
 
 /**
  * Resolves `application/bindjs+json` View documents (bindjs/bindings/mcp-apps.md) into
- * the components to run. The package comes from the digest cache, else from its
- * `contentUrl` (found through `resources/list`), else from `resources/read`. Bytes are
- * checked against `sha256` and `size` before they are decoded; nothing that fails the
- * check is executed or cached.
+ * the components to run. The package comes from its `contentUrl` (found through
+ * `resources/list`) through the HTTP cache, else from `resources/read`. Bytes are
+ * checked against `sha256` and `size` before they are decoded or a decoded copy is
+ * used; nothing that fails the check is executed or cached.
  */
 class BindJSViewLoader(
     private val client: MCPAppsClient,
     private val cache: BindJSPackageCache = BindJSPackageCache.shared,
-    private val http: OkHttpClient = OkHttpClient(),
+    private val http: OkHttpClient = BindJSPackageHttp.client,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
     private val listMutex = Mutex()
@@ -146,21 +157,32 @@ class BindJSViewLoader(
     private suspend fun fetch(uri: String, sha256: String?, size: Long?): BindJSPackage {
         // Without a digest there is nothing to verify against and nothing to cache by.
         if (sha256 == null) return decode(read(uri))
-        return cache.getOrLoad(sha256) {
-            val fromCdn = contentUrl(uri)?.let { url ->
-                download(url)?.takeIf { bytes ->
-                    verifies(bytes, sha256, size).also { if (!it) Log.w(TAG, "Package $uri from $url failed its integrity check; reading it over MCP") }
+        return cache.withLock(sha256) {
+            val url = contentUrl(uri)
+            val fromCdn = url?.let { download(it) }?.takeIf { response ->
+                verifies(response.bytes, sha256, size).also { if (!it) Log.w(TAG, "Package $uri from $url failed its integrity check; reading it over MCP") }
+            }
+            when {
+                // The server asked that this package not be kept, decoded or otherwise.
+                fromCdn?.noStore == true -> decode(fromCdn.bytes).also { cache.remove(sha256) }
+                fromCdn != null -> cache[sha256] ?: decode(fromCdn.bytes).also { cache[sha256] = it }
+                else -> {
+                    // With no contentUrl there are no HTTP rules, and the stated digest is
+                    // enough to use a held copy. A contentUrl that failed is read over MCP.
+                    val bytes = if (url != null) verifiedRead(uri, sha256, size) else null
+                    cache[sha256] ?: decode(bytes ?: verifiedRead(uri, sha256, size)).also { cache[sha256] = it }
                 }
             }
-            val bytes = fromCdn ?: read(uri).also { bytes ->
-                if (!verifies(bytes, sha256, size)) {
-                    Log.e(TAG, "Package $uri failed its integrity check; not executing it")
-                    throw BindJSViewException("Package $uri does not match its sha256/size")
-                }
-            }
-            decode(bytes)
         }
     }
+
+    private suspend fun verifiedRead(uri: String, sha256: String, size: Long?): ByteArray =
+        read(uri).also { bytes ->
+            if (!verifies(bytes, sha256, size)) {
+                Log.e(TAG, "Package $uri failed its integrity check; not executing it")
+                throw BindJSViewException("Package $uri does not match its sha256/size")
+            }
+        }
 
     private suspend fun read(uri: String): ByteArray {
         val resource = client.readResource(uri)
@@ -186,10 +208,16 @@ class BindJSViewLoader(
         contentUrls?.get(uri)
     }
 
-    private suspend fun download(url: String): ByteArray? = try {
+    private class Download(val bytes: ByteArray, val noStore: Boolean)
+
+    /** Through [http], so its cache answers when the package is fresh and revalidates it when not. */
+    private suspend fun download(url: String): Download? = try {
         withContext(Dispatchers.IO) {
-            http.newCall(Request.Builder().url(url).build()).execute().use { response ->
-                if (response.isSuccessful) response.body?.bytes() else null
+            val request = Request.Builder().url(url).header("Accept", MCPAppsClient.BINDJS_PACKAGE_MIME_TYPE).build()
+            http.newCall(request).execute().use { response ->
+                // A redirect must not leave HTTPS, whatever client the loader was given.
+                if (response.code != 200 || !response.request.url.isHttps) return@use null
+                Download(response.body?.bytes() ?: return@use null, response.cacheControl.noStore)
             }
         }.also { if (it == null) Log.w(TAG, "Fetching $url failed; reading the package over MCP") }
     } catch (e: CancellationException) {
