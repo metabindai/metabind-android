@@ -89,9 +89,9 @@ Then add the libraries you need to your module's `build.gradle.kts`. All three s
 
 ```kotlin
 dependencies {
-    implementation("ai.metabind:metabindai-android:0.2.12")        // embed the agent
-    implementation("ai.metabind:mcpappshost-android:0.2.12")       // low-level rendering
-    implementation("ai.metabind:metabind-content-android:0.2.12")  // content SDK
+    implementation("ai.metabind:metabindai-android:0.2.13")        // embed the agent
+    implementation("ai.metabind:mcpappshost-android:0.2.13")       // low-level rendering
+    implementation("ai.metabind:metabind-content-android:0.2.13")  // content SDK
 }
 ```
 
@@ -125,9 +125,29 @@ The assistant derives the MCP server URL from your org and project ids; the opti
 
 Your Metabind API key authenticates both the MCP server and the agent proxy.
 
+### Account access tokens
+
+To act as a signed-in Metabind account instead of with an API key, pass `MetabindAssistant(accessTokenProvider = { ... })`: a suspend callback that returns a fresh account access token. MCP requests and Agent turns send it as `Authorization: Bearer <token>`. Your app owns browser sign-in, encrypted storage, and refresh. With a provider, `apiKey` is optional. Without either credential, the assistant refuses to connect. There is no anonymous chat.
+
+### Draft previews
+
+`MetabindAssistant(draft = true)` uses the project's draft MCP endpoint and requests the project's saved draft configuration from the Agent proxy. `awaitReady()` checks MCP access before you show the chat, without sending a message or running a tool. `refreshPreviewResources()` refreshes tool definitions and existing UI resources between turns, without replaying tool calls.
+
+The `samples/app` preview host uses account access tokens and draft previews to open projects from a QR code or link. See its README for the link format and local test workflow.
+
+### BindJS Views
+
+`MetabindAssistant` declares `application/bindjs+json;version=1.0` (the [MCP Apps binding](https://github.com/metabindai/bindjs/blob/master/bindings/mcp-apps.md)) next to the legacy type, so a View arrives without code and its package is fetched separately: from the package's `contentUrl`, else `resources/read`. The package is checked against the View's `sha256` and `size` before anything runs.
+
+Downloads from a `contentUrl` go through a 128 MiB OkHttp disk cache under `cacheDir/bindjs-packages` (set up by an AndroidX App Startup initializer), so the server's `Cache-Control` and validators decide when a package is downloaded again, and an immutable package survives app restarts; HTTPS to HTTP redirects are refused, and no MCP credentials reach the CDN. Verified packages are kept decoded by digest for the life of the process, so a package already decoded is not decoded again (`no-store` packages excepted). For your own client, `BindJSPackageHttp.newClient(...)`.
+
+A View that fails the check, needs an unsupported BindJS major, or can't be fetched is shown as HTML, read through a second session that declares HTML only.
+
 ## MCPAppsHost: render a single tool result
 
 `:mcpappshost` is the low-level layer `:metabindai` is built on. Use `MCPAppsClient` directly when you want to drive the MCP connection and render a single tool's UI resource yourself, without the conversational layer.
+
+To receive BindJS Views in your own host, `MCPAppsClient(mimeTypes = ...)` sets what `initialize` declares (it still defaults to the legacy type and HTML), `BindJSViewLoader` resolves a View, and `ToolUIContent.fromBindJSView` turns the result into renderable content.
 
 ## MetabindContent: fetch and render content
 
@@ -189,6 +209,7 @@ Runnable sample apps live under [`samples/`](samples/):
 |---|---|---|
 | App | [`samples/app`](samples/app) | A multi-module Compose app rendering Metabind content with `MetabindView` / `ThumbnailView`. |
 | Assistant Demo | [`samples/assistant-demo`](samples/assistant-demo) | A chat app driving the agent and rendering Interactive Tool responses with `MetabindAssistantView`. |
+| Finance Demo | [`samples/finance-demo`](samples/finance-demo) | A configurable finance reference app built on `:metabindai`. |
 | Retail | [`samples/retail`](samples/retail) | Placeholder for a retail content sample (stub). |
 
 Each sample is its own Gradle build and, by default, builds against the **in-tree SDK
@@ -198,6 +219,7 @@ so editing SDK source flows straight into the next sample build, no publishing r
 ```bash
 cd samples/app            && ./gradlew :app:assembleDebug
 cd samples/assistant-demo && ./gradlew :app:assembleDebug
+cd samples/finance-demo   && ./gradlew :app:assembleDebug
 ```
 
 ### Building a sample against the published SDK
@@ -205,7 +227,7 @@ cd samples/assistant-demo && ./gradlew :app:assembleDebug
 To use a sample standalone against the published coordinates instead of in-tree sources,
 comment out the `includeBuild("../..") { … }` block in that sample's `settings.gradle.kts`
 and set the SDK version alias in its `gradle/libs.versions.toml` (`metabind` for the app,
-`metabindAssistant` for the assistant demo) to the published version you want. Gradle will
+`metabindAssistant` for the assistant and finance demos) to the published version you want. Gradle will
 then resolve `ai.metabind:*-android` from GitHub Packages like any other dependency.
 
 ## Building from source
@@ -220,16 +242,6 @@ then resolve `ai.metabind:*-android` from GitHub Packages like any other depende
 GraphQL schema and operations for the content module live in
 `metabind-content/src/main/graphql/`; Apollo generates the client into
 `metabind-content/build/generated/`.
-
-## Unreleased APIs on `main`
-
-These APIs are on `main` but not in any published version, including 0.2.12. You can use them only by building the SDK from source, as the samples in this repository do with `includeBuild("../..")`.
-
-- **Account access tokens.** `MetabindAssistant(accessTokenProvider = { ... })` takes a suspend callback that returns a fresh Metabind account access token. MCP requests and Agent turns send it as `Authorization: Bearer <token>`. Your app owns browser sign-in, encrypted storage, and refresh. With a provider, `apiKey` is optional. Without either credential, the assistant refuses to connect. There is no anonymous chat.
-- **Draft previews.** `MetabindAssistant(draft = true)` uses the project's draft MCP endpoint and requests the project's saved draft configuration from the Agent proxy. `awaitReady()` checks MCP access before you show the chat, without sending a message or running a tool. `refreshPreviewResources()` refreshes tool definitions and existing UI resources between turns, without replaying tool calls.
-- **BindJS View channel.** `MetabindAssistant` declares `application/bindjs+json;version=1.0` (the [MCP Apps binding](https://github.com/metabindai/bindjs/blob/master/bindings/mcp-apps.md)) next to the legacy type, so a View arrives without code and its package is fetched separately: from the package's `contentUrl`, else `resources/read`. The package is checked against the View's `sha256` and `size` before anything runs. Downloads from a `contentUrl` go through a 128 MiB OkHttp disk cache under `cacheDir/bindjs-packages` (set up by an AndroidX App Startup initializer), so the server's `Cache-Control` and validators decide when a package is downloaded again, and an immutable package survives app restarts; HTTPS to HTTP redirects are refused, and no MCP credentials reach the CDN. Verified packages are kept decoded by digest for the life of the process, so a package already decoded is not decoded again (`no-store` packages excepted). For your own client, `BindJSPackageHttp.newClient(...)`. A View that fails the check, needs an unsupported BindJS major, or can't be fetched is shown as HTML, read through a second session that declares HTML only. For your own host, `MCPAppsClient(mimeTypes = ...)` sets what `initialize` declares (it still defaults to the legacy type and HTML), `BindJSViewLoader` resolves a View, and `ToolUIContent.fromBindJSView` turns the result into renderable content.
-
-The `samples/app` preview host uses both to open projects from a QR code or link. See its README for the link format and local test workflow.
 
 ## License
 
