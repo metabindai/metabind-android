@@ -62,9 +62,7 @@ class PreviewOAuth @Inject constructor(
         val clientId = registered.getString("client_id")
         require(clientId.isNotBlank() && OAuthTrust.validScope(registered.getString("scope")))
         val config = AuthorizationServiceConfiguration(Uri.parse(authorization), Uri.parse(token))
-        val request = AuthorizationRequest.Builder(config, clientId, ResponseTypeValues.CODE, callback)
-            .setScope(OAuthTrust.scopes)
-            .setAdditionalParameters(mapOf("project_id" to project.projectId)).build()
+        val request = PreviewOAuthRequests.authorize(project, config, clientId, callback)
         service.getAuthorizationRequestIntent(request)
     }
 
@@ -73,13 +71,13 @@ class PreviewOAuth @Inject constructor(
         val response = AuthorizationResponse.fromIntent(data) ?: throw SignInRequired()
         val request = response.request
         require(request.redirectUri == callback && request.responseType == ResponseTypeValues.CODE)
-        require(request.additionalParameters["project_id"] == project.projectId)
         require(!request.state.isNullOrBlank() && request.state == response.state)
         require(!request.codeVerifier.isNullOrBlank() && request.codeVerifierChallengeMethod == "S256")
         require(OAuthTrust.validScope(request.scope.orEmpty()))
         validateConfiguration(project, request.configuration)
+        val exchange = PreviewOAuthRequests.exchange(project, response)
         val token = suspendCancellableCoroutine<TokenResponse> { continuation ->
-            service.performTokenRequest(response.createTokenExchangeRequest()) { value, error ->
+            service.performTokenRequest(exchange) { value, error ->
                 if (continuation.isActive) {
                     if (value != null && error == null) continuation.resume(value)
                     else continuation.resumeWithException(SignInRequired())
@@ -102,7 +100,7 @@ class PreviewOAuth @Inject constructor(
         if ((state.accessTokenExpirationTime ?: 0) <= System.currentTimeMillis() + 60_000 && state.refreshToken == null) throw SignInRequired()
         try {
             val token = suspendCancellableCoroutine<String> { continuation ->
-                state.performActionWithFreshTokens(service) { accessToken, _, error ->
+                state.performActionWithFreshTokens(service, PreviewOAuthRequests.tokenParameters(project)) { accessToken, _, error ->
                     if (continuation.isActive) {
                         when {
                             error?.error in setOf("invalid_grant", "invalid_client") -> continuation.resumeWithException(SignInRequired())
@@ -153,5 +151,23 @@ internal object OAuthTrust {
         endpoint(authorization, setOf(web))
         endpoint(token, setOf(api))
         registration?.let { endpoint(it, setOf(api, mcp)) }
+    }
+}
+
+/** Bind every OAuth step to the same project endpoint, including its draft suffix. */
+internal object PreviewOAuthRequests {
+    fun tokenParameters(project: MCPPreviewLink) = mapOf("resource" to project.serverUrl)
+
+    fun authorize(project: MCPPreviewLink, config: AuthorizationServiceConfiguration,
+                  clientId: String, callback: Uri): AuthorizationRequest =
+        AuthorizationRequest.Builder(config, clientId, ResponseTypeValues.CODE, callback)
+            .setScope(OAuthTrust.scopes)
+            .setAdditionalParameters(tokenParameters(project) + ("project_id" to project.projectId))
+            .build()
+
+    fun exchange(project: MCPPreviewLink, response: AuthorizationResponse): TokenRequest {
+        require(response.request.additionalParameters["project_id"] == project.projectId)
+        require(response.request.additionalParameters["resource"] == project.serverUrl)
+        return response.createTokenExchangeRequest(tokenParameters(project))
     }
 }
