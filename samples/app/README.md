@@ -26,7 +26,10 @@ an Authorization bearer header. Published mode does not run draft polling.
 AppAuth opens the system browser and
 uses authorization code flow with S256 PKCE and random state. The app validates
 discovery hosts, project, callback, and granted scopes. It refreshes access tokens
-for MCP requests and Agent turns without resetting the conversation. OAuth state
+for MCP requests and Agent turns without resetting the conversation.
+Authorization, code exchange, and token refresh send the exact MCP endpoint as
+the OAuth `resource`, including `/draft` for draft projects. This preserves the
+project, mode, and environment binding required by the server. OAuth state
 is encrypted with an Android Keystore key and excluded from backups. Old QR keys
 are ignored and legacy stored keys are removed when the corresponding draft is opened.
 **Disconnect this project** and removing a recent clear the device's grant, not
